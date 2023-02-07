@@ -21,6 +21,6 @@ for(const table of tablesArray) {
 
 for(const bucket of bucketArray) {
   const { BucketName } = bucket.Properties;
-  const command = `aws s3api create-bucket --bucket "${BucketName}" --endpoint-url=http://localhost:9000 --profile sam-local >/dev/null`;
+  const command = `aws s3api create-bucket --bucket ${BucketName} --endpoint-url=http://localhost:9000 --profile sam-local`;
   console.log(command);
 }
