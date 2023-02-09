@@ -11,13 +11,102 @@ Globals:
     Timeout: 3
 
 Resources:
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: "diamory-user-pool"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 16
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
   
-  DiamoryS3Bucket:
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: "diamory-user-pool-client"
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - "code"
+        - "implicit"
+      AllowedOAuthScopes:
+        - "profile"
+        - "openid"
+      CallbackURLs:
+        - "https://diamory.de?callback"
+      LogoutURLs:
+        - "https://diamory.de?logout"
+      SupportedIdentityProviders:
+        - "COGNITO"
+      
+  UserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Properties:
+      UserPoolId: !Ref UserPool 
+      Domain: "diamory-user"
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName: "diamory-user-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "diamory-user-execution-role-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "dynamodb:*"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:eu-central-1:*:*"
+              - Effect: Allow
+                Action: "logs:CreateLogGroup"
+                Resource: "*"
+
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Auth:
+        Authorizers:
+          ManagerAuthorizer:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              audience:
+                - !Ref UserPoolClient
+              issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
+        DefaultAuthorizer: ManagerAuthorizer
+      #### TODO: enable and edit to diamory domain when registered in aws
+      #Domain:
+        #DomainName: "diamory.de"
+        #CertificateArn: "arn:aws:acm:eu-central-1:828803652383:certificate/4b5d3c42-6d59-4056-9a08-710db8ee023c"
+        #EndpointConfiguration: REGIONAL
+        #Route53:
+          #HostedZoneId: "Z078443521KM7OIOUJEME"
+  
+  S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: diamory-s3-bucket
 
-  DiamoryItemTable:
+  ItemTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: "diamory-item"
@@ -57,9 +146,10 @@ Resources:
       Architectures:
         - x86_64
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        HttpApiGetEvent:
+          Type: HttpApi
           Properties:
+            ApiId: !Ref Api
             Path: /hello
             Method: get
     Metadata: # Manage esbuild properties
@@ -75,15 +165,18 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
+  HelloWorldApiInfo:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/hello"
+  HelloWorldFunctionInfo:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
+  HelloWorldFunctionIamRoleInfo:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
-  S3Bucket:
+  S3BucketInfo:
     Description: S3 Bucket for masterkey and encrypted payloads
-    Value: !GetAtt DiamoryS3Bucket.Arn
+    Value: !GetAtt S3Bucket.Arn
+  ItemTableInfo:
+    Description: dynamo db table for payload metadata
+    Value: !GetAtt ItemTable.Arn
