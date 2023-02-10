@@ -14,7 +14,13 @@ export default (method: string, path: string, body: object = {}): APIGatewayProx
         requestContext: {
             accountId: '123456789012',
             apiId: '1234',
-            authorizer: {},
+            authorizer: {
+                jwt: {
+                    claims: {
+                        username: 'testuser',
+                    },
+                },
+            },
             httpMethod: method,
             identity: {
                 accessKey: '',
