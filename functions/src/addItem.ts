@@ -27,17 +27,13 @@ const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
         const { accountId } = event.requestContext;
-        console.log('1111111111111');
         await checkAccount(accountId);
-        console.log('2222222222222');
         const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '');
         const item = {
             ...itemWithoutAccountId,
             accountId,
         };
-        console.log('3333333333333');
         addItem(item);
-        console.log('4444444444444');
         return {
             statusCode: 201,
             body: JSON.stringify({
@@ -45,10 +41,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             }),
         };
     } catch (err: unknown) {
-        console.log('555555555555');
         console.error({ err });
         const errMsg = err ? (err as Error).message : '';
-        console.log('666666666666');
         return {
             statusCode: 500,
             body: JSON.stringify({
