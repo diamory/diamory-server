@@ -153,7 +153,7 @@ Resources:
   AddItemFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: src/functions/addItem
+      CodeUri: src/functions/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
