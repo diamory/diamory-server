@@ -1,13 +1,21 @@
 {
-  "name": "diamory-server-lambda-functions",
-  "version": "1.0.0",
-  "description": "lambda functions source code",
+  "name": "diamory-server",
+  "version": "0.1.0",
+  "description": "Backend source code (AWS SAM Application) for diamory.",
   "license": "MIT",
+  "author": "Mark Herrmann",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diamory/diamory-browser.git"
+  },
+  "private": true,
   "scripts": {
     "compile_": "tsc",
     "unit_": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
-    "test": "./scripts/tests.sh"
+    "test": "./scripts/tests.sh",
+    "deploy": "sam build && sam deploy --profile for-sam",
+    "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile for-sam"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.92",
