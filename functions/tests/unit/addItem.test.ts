@@ -70,12 +70,12 @@ describe('Put Item', (): void => {
             }),
         );
         assert.that(Item).is.not.undefined();
-        //assert.that(Item).is.not.null();
-        //assert.that(Item.id).is.equalTo(id);
-        //assert.that(Item.checksum).is.equalTo(checksum);
-        //assert.that(Item.payloadTimestamp).is.equalTo(payloadTimestamp);
-        //assert.that(Item.keepOffline).is.equalTo(keepOffline);
-        //assert.that(Item.accountId).is.equalTo(accountId);
+        assert.that(Item).is.not.null();
+        assert.that(Item.id).is.equalTo(id);
+        assert.that(Item.checksum).is.equalTo(checksum);
+        assert.that(Item.payloadTimestamp).is.equalTo(payloadTimestamp);
+        assert.that(Item.keepOffline).is.equalTo(keepOffline);
+        assert.that(Item.accountId).is.equalTo(accountId);
     });
 
     test('returns with error on suspended account', async (): Promise<void> => {
