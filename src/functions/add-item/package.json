@@ -1,0 +1,11 @@
+{
+  "name": "add-item",
+  "version": "0.1.0",
+  "description": "Lambda Function to add a payload metadata item into dynamoDB.",
+  "main": "app.js",
+  "author": "Mark Herrmann",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "2.1314.0"
+  }
+}

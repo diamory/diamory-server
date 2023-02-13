@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import dynamoDBClient from './../../lib/dynamoDBClient';
-import { DiamoryItem, DiamoryItemWithAccountId } from './../../types/item';
+import { dynamoDBClient } from './dynamoDBClient';
+import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const notAllowedError = 'you are not allowed to do so';
 

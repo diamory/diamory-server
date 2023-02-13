@@ -1,9 +1,16 @@
 import { lambdaHandler, notAllowedError } from '../../src/functions/add-item/app';
 import { buildTestEvent, accountId } from './event';
 import { assert } from 'assertthat';
-import dynamoDBClient from '../../src/lib/dynamoDBClient';
-import { DiamoryItem, DiamoryItemWithAccountId } from '../../src/types/item';
-import { AnyItem } from '../../src/types/generics';
+import { dynamoDBClient } from '../../src/functions/add-item/dynamoDBClient';
+import { DiamoryItem, DiamoryItemWithAccountId } from '../../src/functions/add-item/item';
+import { AnyItem } from './types/generics';
+
+jest.mock('../../src/functions/add-item/dynamoDBClient', () => {
+    const originalModule = jest.requireActual('./localRes/dynamoDBClient');
+    return {
+        ...originalModule,
+    };
+});
 
 const testItem: DiamoryItem = {
     id: 'id',

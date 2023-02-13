@@ -71,7 +71,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: "dynamodb:*"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -156,6 +156,7 @@ Resources:
       CodeUri: src/functions/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
       Architectures:
         - x86_64
       Events:
@@ -164,12 +165,12 @@ Resources:
           Properties:
             ApiId: !Ref Api
             Path: /put-item
-            Method: get
+            Method: post
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
-        Minify: true
+        Minify: false
         Target: "es2020"
-        Sourcemap: true
+        Sourcemap: false
         EntryPoints: 
         - app.ts
