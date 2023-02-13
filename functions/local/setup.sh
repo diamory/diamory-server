@@ -3,10 +3,6 @@
 PROFILE=sam-local
 CONFIG_FILE=~/.aws/config
 
-# build
-sam build
-cd local
-
 # start docker environment
 echo "setup docker environment"
 docker-compose up -d
@@ -30,5 +26,3 @@ echo -e "$commands" | while read command
 do
   $command >/dev/null
 done
-
-cd -

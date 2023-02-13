@@ -4,7 +4,6 @@
  */
 
 export default {
-    preset: '@shelf/jest-dynamodb',
     transform: {
         '^.+\\.ts?$': 'esbuild-jest',
     },

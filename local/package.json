@@ -1,9 +1,0 @@
-{
-  "name": "local",
-  "version": "0.0.0",
-  "description": "",
-  "main": "buildTables.js",
-  "dependencies": {
-    "js-yaml": "4.1.0"
-  }
-}

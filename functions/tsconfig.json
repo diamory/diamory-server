@@ -12,5 +12,5 @@
       "forceConsistentCasingInFileNames": true,
       "types": ["node", "jest"],
     },
-    "exclude": ["node_modules", "./jest-dynamodb-config.js"]
+    "exclude": ["node_modules", "local/getBuildResourceCommands.js"]
 }
