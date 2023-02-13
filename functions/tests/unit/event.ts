@@ -1,6 +1,8 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-export default (method: string, path: string, body: object = {}): APIGatewayProxyEvent => {
+const accountId = '123456789012';
+
+const buildTestEvent = (method: string, path: string, body: object = {}): APIGatewayProxyEvent => {
     return {
         httpMethod: method,
         body: JSON.stringify(body),
@@ -12,7 +14,7 @@ export default (method: string, path: string, body: object = {}): APIGatewayProx
         pathParameters: {},
         queryStringParameters: {},
         requestContext: {
-            accountId: '123456789012',
+            accountId,
             apiId: '1234',
             authorizer: {
                 jwt: {
@@ -57,3 +59,5 @@ export default (method: string, path: string, body: object = {}): APIGatewayProx
         stageVariables: {},
     };
 };
+
+export { buildTestEvent, accountId };

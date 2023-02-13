@@ -113,23 +113,23 @@ Resources:
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
-        - AttributeName: "userID"
+        - AttributeName: "accountId"
           AttributeType: "S"
         - AttributeName: "id"
           AttributeType: "S"
-        - AttributeName: "timestamp"
+        - AttributeName: "payloadTimestamp"
           AttributeType: "N"
       KeySchema:
-        - AttributeName: "userID"
+        - AttributeName: "accountId"
           KeyType: "HASH"
         - AttributeName: "id"
           KeyType: "RANGE"
       LocalSecondaryIndexes:
         - IndexName: timestamp-index
           KeySchema:
-            - AttributeName: "userID"
+            - AttributeName: "accountId"
               KeyType: "HASH"
-            - AttributeName: "timestamp"
+            - AttributeName: "payloadTimestamp"
               KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
@@ -137,11 +137,24 @@ Resources:
               - "keepOffline"
             ProjectionType: "INCLUDE"
 
-  HelloWorldFunction:
+  AccountTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "diamory-account"
+      TableClass: "STANDARD"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "accountId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "accountId"
+          KeyType: "HASH"
+
+  AddItemFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: functions/src/
-      Handler: helloWorld.lambdaHandler
+      Handler: addItem.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - x86_64
@@ -150,7 +163,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /hello
+            Path: /put-item
             Method: get
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -159,24 +172,4 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints: 
-        - helloWorld.ts
-
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApiInfo:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/hello"
-  HelloWorldFunctionInfo:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRoleInfo:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
-  S3BucketInfo:
-    Description: S3 Bucket for masterkey and encrypted payloads
-    Value: !GetAtt S3Bucket.Arn
-  ItemTableInfo:
-    Description: dynamo db table for payload metadata
-    Value: !GetAtt ItemTable.Arn
+        - addItem.ts

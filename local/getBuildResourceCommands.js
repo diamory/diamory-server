@@ -10,12 +10,15 @@ const bucketArray = resourcesArray.filter(e => e.Type === 'AWS::S3::Bucket');
 
 for(const table of tablesArray) {
   const { TableName, BillingMode, AttributeDefinitions, KeySchema, LocalSecondaryIndexes } = table.Properties;
-  const command = `aws dynamodb create-table --endpoint-url http://localhost:8000 \
+  let command = `aws dynamodb create-table --endpoint-url http://localhost:8000 \
     --table-name ${TableName} \
     --attribute-definitions ${JSON.stringify(AttributeDefinitions)} \
     --key-schema ${JSON.stringify(KeySchema)} \
-    --local-secondary-indexes ${JSON.stringify(LocalSecondaryIndexes)} \
     --billing-mode ${BillingMode}`;
+
+  if (LocalSecondaryIndexes) {
+    command = `${command} --local-secondary-indexes ${JSON.stringify(LocalSecondaryIndexes)}`;
+  }
   console.log(command);
 }
 
