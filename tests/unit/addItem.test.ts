@@ -1,4 +1,4 @@
-import { lambdaHandler, notAllowedError } from '../../src/addItem';
+import { lambdaHandler, notAllowedError } from '../../src/functions/addItem/app';
 import { buildTestEvent, accountId } from './event';
 import { assert } from 'assertthat';
 import dynamoDBClient from '../../src/lib/dynamoDBClient';

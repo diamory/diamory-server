@@ -7,7 +7,7 @@
     "compile_": "tsc",
     "unit_": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
-    "test": "cd local && ./setup.sh && cd - && npm run compile_ && npm run unit_; exitCode=$?; cd local; ./teardown.sh && exit $exitCode"
+    "test": "./scripts/tests.sh"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.92",
