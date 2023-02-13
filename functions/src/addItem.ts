@@ -33,7 +33,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             ...itemWithoutAccountId,
             accountId,
         };
-        addItem(item);
+        await addItem(item);
         return {
             statusCode: 201,
             body: JSON.stringify({
