@@ -2,7 +2,7 @@
 const yaml = require('js-yaml');
 const fs = require('fs');
 
-const { Resources } = yaml.load(fs.readFileSync('../../template.yaml', 'utf8').replace(/![a-zA-Z]+/g, ''));
+const { Resources } = yaml.load(fs.readFileSync('../template.yaml', 'utf8').replace(/![a-zA-Z]+/g, ''));
 
 const resourcesArray = Object.keys(Resources).map((key) => Resources[key]);
 
