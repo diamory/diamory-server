@@ -6,7 +6,7 @@ const notAllowedError = 'you are not allowed to do so';
 const invalidItemError = 'invalid item';
 
 interface AnyItem {
-    [key: string]: string | number;
+    [key: string]: unknown;
 }
 
 const checkAccount = async (accountId: string): Promise<void> => {
