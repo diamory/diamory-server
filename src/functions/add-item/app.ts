@@ -3,6 +3,11 @@ import { dynamoDBClient } from './dynamoDBClient';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const notAllowedError = 'you are not allowed to do so';
+const invalidItemError = 'invalid item';
+
+interface AnyItem {
+    [key: string]: string | number;
+}
 
 const checkAccount = async (accountId: string): Promise<void> => {
     const params = {
@@ -19,6 +24,26 @@ const checkAccount = async (accountId: string): Promise<void> => {
     }
 };
 
+const checkItem = (item: AnyItem): void => {
+    const required = {
+        id: 'string',
+        checksum: 'string',
+        payloadTimestamp: 'number',
+        keepOffline: 'boolean',
+    };
+    for (const [key, value] of Object.entries(required)) {
+        if (!(key in item) || typeof item[key] !== value) {
+            throw new Error(invalidItemError);
+        }
+        if (key !== 'keepOffline' && !item[key]) {
+            throw new Error(invalidItemError);
+        }
+    }
+    if (!/^[A-Fa-f0-9]{64}$/u.test(item.checksum as string)) {
+        throw new Error(invalidItemError);
+    }
+};
+
 const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
     const params = { TableName: 'diamory-item', Item };
     await dynamoDBClient.put(params).promise();
@@ -28,7 +53,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     try {
         const { accountId } = event.requestContext;
         await checkAccount(accountId);
-        const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '');
+        const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
+        checkItem(itemWithoutAccountId as unknown as AnyItem);
         const item = {
             ...itemWithoutAccountId,
             accountId,
@@ -52,4 +78,4 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
 };
 
-export { lambdaHandler, notAllowedError };
+export { lambdaHandler, notAllowedError, invalidItemError };

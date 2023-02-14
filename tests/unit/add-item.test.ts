@@ -1,4 +1,4 @@
-import { lambdaHandler, notAllowedError } from '../../src/functions/add-item/app';
+import { lambdaHandler, notAllowedError, invalidItemError } from '../../src/functions/add-item/app';
 import { buildTestEvent, accountId } from './event';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../src/functions/add-item/dynamoDBClient';
@@ -14,7 +14,7 @@ jest.mock('../../src/functions/add-item/dynamoDBClient', () => {
 
 const testItem: DiamoryItem = {
     id: 'id',
-    checksum: 'checksum',
+    checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
     payloadTimestamp: 42,
     keepOffline: true,
 };
@@ -62,7 +62,7 @@ describe('Put Item', (): void => {
         await deleteAccount();
     });
 
-    test('returns with success on active account', async (): Promise<void> => {
+    test('returns with success on active account.', async (): Promise<void> => {
         await putAccount('active');
         const event = buildTestEvent('post', '/put-item', testItem);
         const { id, checksum, payloadTimestamp, keepOffline } = testItem;
@@ -85,7 +85,7 @@ describe('Put Item', (): void => {
         assert.that(Item.accountId).is.equalTo(accountId);
     });
 
-    test('returns with error on suspended account', async (): Promise<void> => {
+    test('returns with error on suspended account.', async (): Promise<void> => {
         await putAccount('suspended');
         const event = buildTestEvent('post', '/put-item', testItem);
 
@@ -101,7 +101,7 @@ describe('Put Item', (): void => {
         assert.that(Item).is.undefined();
     });
 
-    test('returns with error on missing account', async (): Promise<void> => {
+    test('returns with error on missing account.', async (): Promise<void> => {
         const event = buildTestEvent('post', '/put-item', testItem);
 
         const { statusCode, body } = await lambdaHandler(event);
@@ -111,6 +111,22 @@ describe('Put Item', (): void => {
         assert.that(body).is.equalTo(
             JSON.stringify({
                 message: `some error happened: ${notAllowedError}`,
+            }),
+        );
+        assert.that(Item).is.undefined();
+    });
+
+    test('returns with error on invalid item.', async (): Promise<void> => {
+        await putAccount('active');
+        const event = buildTestEvent('post', '/put-item');
+
+        const { statusCode, body } = await lambdaHandler(event);
+
+        const Item = await getItem();
+        assert.that(statusCode).is.equalTo(500);
+        assert.that(body).is.equalTo(
+            JSON.stringify({
+                message: `some error happened: ${invalidItemError}`,
             }),
         );
         assert.that(Item).is.undefined();
