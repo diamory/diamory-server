@@ -6,6 +6,6 @@ stack_name = "diamory-server"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1e8l7nacbvxxq"
 s3_prefix = "diamory-server"
 region = "eu-central-1"
-profile = "for-sam"
+profile = "diamory"
 capabilities = "CAPABILITY_NAMED_IAM"
 image_repositories = []

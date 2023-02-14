@@ -73,6 +73,9 @@ Resources:
                 Action: "dynamodb:*"
                 Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-*"
               - Effect: Allow
+                Action: "s3:*"
+                Resource: "arn:aws:s3:::diamory-s3-bucket"
+              - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
@@ -105,6 +108,13 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: diamory-s3-bucket
+      VersioningConfiguration: 
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   ItemTable:
     Type: AWS::DynamoDB::Table
