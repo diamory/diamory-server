@@ -14,8 +14,8 @@
     "unit_": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "./scripts/tests.sh",
-    "deploy": "sam build && sam deploy --profile for-sam",
-    "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile for-sam"
+    "deploy": "sam build && sam deploy --profile diamory",
+    "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.92",
