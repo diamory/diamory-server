@@ -5,6 +5,7 @@ import {
   itemAlreadyExistsError
 } from '../../../src/functions/add-item/app';
 import { buildTestEvent, accountId } from '../event';
+import { accountTableName, itemTableName } from '../constants';
 import { assert } from 'assertthat';
 import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
 import { DiamoryItem, DiamoryItemWithAccountId } from '../../../src/functions/add-item/item';
@@ -23,9 +24,6 @@ const testItem: DiamoryItem = {
   payloadTimestamp: 42,
   keepOffline: true
 };
-
-const itemTableName = 'diamory-item';
-const accountTableName = 'diamory-account';
 
 const getItem = async (): Promise<AnyItem | undefined> => {
   const { id } = testItem;
@@ -80,12 +78,9 @@ describe('Add Item', (): void => {
     const { statusCode, body } = await lambdaHandler(event);
 
     const Item = (await getItem()) as unknown as DiamoryItemWithAccountId;
+    const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(201);
-    assert.that(body).is.equalTo(
-      JSON.stringify({
-        message: 'ok'
-      })
-    );
+    assert.that(message).is.equalTo('ok');
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item.id).is.equalTo(id);
@@ -105,12 +100,9 @@ describe('Add Item', (): void => {
     const { statusCode, body } = await lambdaHandler(updateEvent);
 
     const Item = await getItem();
+    const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
-    assert.that(body).is.equalTo(
-      JSON.stringify({
-        message: `some error happened: ${itemAlreadyExistsError}`
-      })
-    );
+    assert.that(message).is.equalTo(`some error happened: ${itemAlreadyExistsError}`);
     console.log({ Item });
     assert.that(Item?.payloadTimestamp).is.equalTo(testItem.payloadTimestamp);
   });
@@ -122,12 +114,9 @@ describe('Add Item', (): void => {
     const { statusCode, body } = await lambdaHandler(event);
 
     const Item = await getItem();
+    const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
-    assert.that(body).is.equalTo(
-      JSON.stringify({
-        message: `some error happened: ${notAllowedError}`
-      })
-    );
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(Item).is.undefined();
   });
 
@@ -137,12 +126,9 @@ describe('Add Item', (): void => {
     const { statusCode, body } = await lambdaHandler(event);
 
     const Item = await getItem();
+    const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
-    assert.that(body).is.equalTo(
-      JSON.stringify({
-        message: `some error happened: ${notAllowedError}`
-      })
-    );
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(Item).is.undefined();
   });
 
@@ -153,12 +139,9 @@ describe('Add Item', (): void => {
     const { statusCode, body } = await lambdaHandler(event);
 
     const Item = await getItem();
+    const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
-    assert.that(body).is.equalTo(
-      JSON.stringify({
-        message: `some error happened: ${invalidItemError}`
-      })
-    );
+    assert.that(message).is.equalTo(`some error happened: ${invalidItemError}`);
     assert.that(Item).is.undefined();
   });
 });
