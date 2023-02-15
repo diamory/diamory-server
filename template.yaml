@@ -5,7 +5,6 @@ Description: >
 
   Sample SAM Template for diamory-server
   
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 3
@@ -161,7 +160,7 @@ Resources:
           KeyType: "HASH"
 
   AddItemFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/functions/add-item
       Handler: app.lambdaHandler
@@ -177,7 +176,33 @@ Resources:
             ApiId: !Ref Api
             Path: /put-item
             Method: post
-    Metadata: # Manage esbuild properties
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+        - app.ts
+
+  GetItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/functions/get-item
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /get-item/{id}
+            Method: get
+    Metadata:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true

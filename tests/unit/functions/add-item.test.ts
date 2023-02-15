@@ -1,12 +1,12 @@
-import { lambdaHandler, notAllowedError, invalidItemError } from '../../src/functions/add-item/app';
-import { buildTestEvent, accountId } from './event';
+import { lambdaHandler, notAllowedError, invalidItemError } from '../../../src/functions/add-item/app';
+import { buildTestEvent, accountId } from '../event';
 import { assert } from 'assertthat';
-import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from './localRes/dynamoDBClient';
-import { DiamoryItem, DiamoryItemWithAccountId } from '../../src/functions/add-item/item';
-import { AnyItem } from './types/generics';
+import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
+import { DiamoryItem, DiamoryItemWithAccountId } from '../../../src/functions/add-item/item';
+import { AnyItem } from '../types/generics';
 
-jest.mock('../../src/functions/add-item/dynamoDBClient', () => {
-  const originalModule = jest.requireActual('./localRes/dynamoDBClient');
+jest.mock('../../../src/functions/add-item/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../localRes/dynamoDBClient');
   return {
     ...originalModule
   };
@@ -69,7 +69,7 @@ describe('Put Item', (): void => {
 
   test('returns with success on active account.', async (): Promise<void> => {
     await putAccount('active');
-    const event = buildTestEvent('post', '/put-item', testItem);
+    const event = buildTestEvent('post', '/put-item', [], testItem);
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -92,7 +92,7 @@ describe('Put Item', (): void => {
 
   test('returns with error on suspended account.', async (): Promise<void> => {
     await putAccount('suspended');
-    const event = buildTestEvent('post', '/put-item', testItem);
+    const event = buildTestEvent('post', '/put-item', [], testItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -107,7 +107,7 @@ describe('Put Item', (): void => {
   });
 
   test('returns with error on missing account.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/put-item', testItem);
+    const event = buildTestEvent('post', '/put-item', [], testItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -123,7 +123,7 @@ describe('Put Item', (): void => {
 
   test('returns with error on invalid item.', async (): Promise<void> => {
     await putAccount('active');
-    const event = buildTestEvent('post', '/put-item');
+    const event = buildTestEvent('post', '/put-item', [], {});
 
     const { statusCode, body } = await lambdaHandler(event);
 

@@ -9,6 +9,6 @@ const config = {
 };
 
 const client = new DynamoDBClient(config);
-const dynamoDBClient = DynamoDBDocumentClient.from(client); // client is DynamoDB client
+const dynamoDBClient = DynamoDBDocumentClient.from(client);
 
 export { dynamoDBClient, PutCommand, GetCommand, DeleteCommand };
