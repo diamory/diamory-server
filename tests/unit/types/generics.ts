@@ -1,5 +1,5 @@
 interface AnyItem {
-    [key: string]: unknown;
+  [key: string]: unknown;
 }
 
 export { AnyItem };

@@ -4,9 +4,9 @@
  */
 
 export default {
-    transform: {
-        '^.+\\.ts?$': 'ts-jest',
-    },
-    clearMocks: true,
-    testMatch: ['**/tests/unit/*.test.ts'],
+  transform: {
+    '^.+\\.ts?$': 'ts-jest'
+  },
+  clearMocks: true,
+  testMatch: ['**/tests/unit/*.test.ts']
 };
