@@ -3,7 +3,7 @@ import { buildTestEvent, accountId } from '../event';
 import { accountTableName, itemTableName } from '../constants';
 import { assert } from 'assertthat';
 import { dynamoDBClient, PutCommand, DeleteCommand } from '../localRes/dynamoDBClient';
-import { DiamoryItem } from '../../../src/functions/get-item/item';
+import { DiamoryItem } from '../types/item';
 
 jest.mock('../../../src/functions/get-item/dynamoDBClient', () => {
   const originalModule = jest.requireActual('../localRes/dynamoDBClient');
