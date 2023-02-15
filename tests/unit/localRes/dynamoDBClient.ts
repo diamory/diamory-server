@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk';
+import DynamoDB from 'aws-sdk/clients/dynamodb';
 
 const config = {
     convertEmptyValues: true,
@@ -7,4 +7,4 @@ const config = {
     region: 'local',
 };
 
-export const dynamoDBClient = new AWS.DynamoDB.DocumentClient(config);
+export const dynamoDBClient = new DynamoDB.DocumentClient(config);
