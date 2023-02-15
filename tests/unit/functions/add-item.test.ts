@@ -1,4 +1,9 @@
-import { lambdaHandler, notAllowedError, invalidItemError } from '../../../src/functions/add-item/app';
+import {
+  lambdaHandler,
+  notAllowedError,
+  invalidItemError,
+  itemAlreadyExistsError
+} from '../../../src/functions/add-item/app';
 import { buildTestEvent, accountId } from '../event';
 import { assert } from 'assertthat';
 import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
@@ -61,7 +66,7 @@ const deleteAccount = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-describe('Put Item', (): void => {
+describe('Add Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
     await deleteAccount();
@@ -88,6 +93,26 @@ describe('Put Item', (): void => {
     assert.that(Item.payloadTimestamp).is.equalTo(payloadTimestamp);
     assert.that(Item.keepOffline).is.equalTo(keepOffline);
     assert.that(Item.accountId).is.equalTo(accountId);
+  });
+
+  test('returns with error when item already exists.', async (): Promise<void> => {
+    await putAccount('active');
+    const addEvent = buildTestEvent('post', '/put-item', [], testItem);
+    await lambdaHandler(addEvent);
+    const modifiedItem = { ...testItem, payloadTimestamp: 96 };
+    const updateEvent = buildTestEvent('post', '/put-item', [], modifiedItem);
+
+    const { statusCode, body } = await lambdaHandler(updateEvent);
+
+    const Item = await getItem();
+    assert.that(statusCode).is.equalTo(500);
+    assert.that(body).is.equalTo(
+      JSON.stringify({
+        message: `some error happened: ${itemAlreadyExistsError}`
+      })
+    );
+    console.log({ Item });
+    assert.that(Item?.payloadTimestamp).is.equalTo(testItem.payloadTimestamp);
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {

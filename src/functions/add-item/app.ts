@@ -4,6 +4,9 @@ import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const notAllowedError = 'you are not allowed to do so';
 const invalidItemError = 'invalid item';
+const itemAlreadyExistsError = 'this item already exists. do update request instead';
+
+const itemTableName = 'diamory-item';
 
 interface AnyItem {
   [key: string]: unknown;
@@ -22,6 +25,18 @@ const checkAccount = async (accountId: string): Promise<void> => {
   }
   if (Item.status !== 'active') {
     throw new Error(notAllowedError);
+  }
+};
+
+const checkItemAlreadyExists = async (id: string, accountId: string): Promise<void> => {
+  const params = {
+    TableName: itemTableName,
+    Key: { id, accountId }
+  };
+  const command = new GetCommand(params);
+  const result = await dynamoDBClient.send(command);
+  if (result?.Item?.id === id) {
+    throw new Error(itemAlreadyExistsError);
   }
 };
 
@@ -61,6 +76,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       ...itemWithoutAccountId,
       accountId
     };
+    await checkItemAlreadyExists(item.id, accountId);
     await addItem(item);
     return {
       statusCode: 201,
@@ -80,4 +96,4 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 };
 
-export { lambdaHandler, notAllowedError, invalidItemError };
+export { lambdaHandler, notAllowedError, invalidItemError, itemAlreadyExistsError };
