@@ -1,10 +1,14 @@
-import DynamoDB from 'aws-sdk/clients/dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 const config = {
     convertEmptyValues: true,
-    endpoint: 'localhost:8000',
+    endpoint: 'http://localhost:8000',
     sslEnabled: false,
     region: 'local',
 };
 
-export const dynamoDBClient = new DynamoDB.DocumentClient(config);
+const client = new DynamoDBClient(config);
+const dynamoDBClient = DynamoDBDocumentClient.from(client); // client is DynamoDB client
+
+export { dynamoDBClient, PutCommand, GetCommand, DeleteCommand };

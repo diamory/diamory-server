@@ -19,13 +19,14 @@
     "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.271.0",
+    "@aws-sdk/lib-dynamodb": "3.271.0",
     "@types/aws-lambda": "8.10.110",
     "@types/jest": "29.4.0",
     "@types/node": "18.13.0",
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
     "assertthat": "6.5.2",
-    "aws-sdk": "2.1314.0",
     "esbuild": "0.17.8",
     "esbuild-jest": "0.5.0",
     "eslint": "8.34.0",

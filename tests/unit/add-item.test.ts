@@ -1,7 +1,7 @@
 import { lambdaHandler, notAllowedError, invalidItemError } from '../../src/functions/add-item/app';
 import { buildTestEvent, accountId } from './event';
 import { assert } from 'assertthat';
-import { dynamoDBClient } from '../../src/functions/add-item/dynamoDBClient';
+import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from './localRes/dynamoDBClient';
 import { DiamoryItem, DiamoryItemWithAccountId } from '../../src/functions/add-item/item';
 import { AnyItem } from './types/generics';
 
@@ -28,7 +28,9 @@ const getItem = async (): Promise<AnyItem | undefined> => {
         TableName: itemTableName,
         Key: { id, accountId },
     };
-    return (await dynamoDBClient.get(params).promise()).Item;
+    const command = new GetCommand(params);
+    const response = await dynamoDBClient.send(command);
+    return response.Item;
 };
 
 const putAccount = async (status: string): Promise<void> => {
@@ -36,7 +38,8 @@ const putAccount = async (status: string): Promise<void> => {
         TableName: accountTableName,
         Item: { accountId, status },
     };
-    await dynamoDBClient.put(params).promise();
+    const command = new PutCommand(params);
+    await dynamoDBClient.send(command);
 };
 
 const deleteItem = async (): Promise<void> => {
@@ -45,7 +48,8 @@ const deleteItem = async (): Promise<void> => {
         TableName: itemTableName,
         Key: { id, accountId },
     };
-    await dynamoDBClient.delete(params).promise();
+    const command = new DeleteCommand(params);
+    await dynamoDBClient.send(command);
 };
 
 const deleteAccount = async (): Promise<void> => {
@@ -53,7 +57,8 @@ const deleteAccount = async (): Promise<void> => {
         TableName: accountTableName,
         Key: { accountId },
     };
-    await dynamoDBClient.delete(params).promise();
+    const command = new DeleteCommand(params);
+    await dynamoDBClient.send(command);
 };
 
 describe('Put Item', (): void => {

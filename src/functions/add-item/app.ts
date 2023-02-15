@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { dynamoDBClient } from './dynamoDBClient';
+import { dynamoDBClient, PutCommand, GetCommand } from './dynamoDBClient';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const notAllowedError = 'you are not allowed to do so';
@@ -14,7 +14,8 @@ const checkAccount = async (accountId: string): Promise<void> => {
         Key: { accountId },
         TableName: 'diamory-account',
     };
-    const { Item } = await dynamoDBClient.get(params).promise();
+    const command = new GetCommand(params);
+    const { Item } = await dynamoDBClient.send(command);
 
     if (!Item) {
         throw new Error(notAllowedError);
@@ -46,7 +47,8 @@ const checkItem = (item: AnyItem): void => {
 
 const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
     const params = { TableName: 'diamory-item', Item };
-    await dynamoDBClient.put(params).promise();
+    const command = new PutCommand(params);
+    await dynamoDBClient.send(command);
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

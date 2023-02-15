@@ -6,6 +6,7 @@
   "author": "Mark Herrmann",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "2.1314.0"
+    "@aws-sdk/client-dynamodb": "3.271.0",
+    "@aws-sdk/lib-dynamodb": "3.271.0"
   }
 }
