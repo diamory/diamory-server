@@ -1,6 +1,6 @@
 import { lambdaHandler, missingItemError, invalidItemError } from '../../../src/functions/update-item/app';
 import { buildTestEvent, accountId } from '../event';
-import { accountTableName, itemTableName } from '../constants';
+import { itemTableName } from '../constants';
 import { AnyItem } from '../types/generics';
 import { assert } from 'assertthat';
 import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
@@ -25,15 +25,6 @@ const modifiedItem: DiamoryItem = {
   checksum: 'a17317b40a568e8da8a045ced110137e159f890ac4da883b6b17dc651ba17317',
   payloadTimestamp: 96,
   keepOffline: false
-};
-
-const putAccount = async (status: string): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Item: { accountId, status }
-  };
-  const command = new PutCommand(params);
-  await dynamoDBClient.send(command);
 };
 
 const getItem = async (): Promise<AnyItem | undefined> => {
@@ -69,24 +60,13 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-const deleteAccount = async (): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Key: { accountId }
-  };
-  const command = new DeleteCommand(params);
-  await dynamoDBClient.send(command);
-};
-
 describe('Update Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
-    await deleteAccount();
   });
 
   test('returns with success when existent item is modified.', async (): Promise<void> => {
     await putItem();
-    await putAccount('active');
     const { id, checksum, payloadTimestamp, keepOffline } = modifiedItem;
     const event = buildTestEvent('put', '/update-item/{id}', [id], modifiedItem);
 
@@ -106,7 +86,6 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
-    await putAccount('active');
     const { id } = modifiedItem;
     const event = buildTestEvent('put', '/update-item/{id}', [id], modifiedItem);
 
@@ -120,7 +99,6 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error on invalid item.', async (): Promise<void> => {
-    await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
     const event = buildTestEvent('post', '/update-item/{id}', [id], {});

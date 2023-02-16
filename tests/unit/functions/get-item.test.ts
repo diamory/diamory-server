@@ -1,6 +1,6 @@
 import { lambdaHandler, missingItemError } from '../../../src/functions/get-item/app';
 import { buildTestEvent, accountId } from '../event';
-import { accountTableName, itemTableName } from '../constants';
+import { itemTableName } from '../constants';
 import { assert } from 'assertthat';
 import { dynamoDBClient, PutCommand, DeleteCommand } from '../localRes/dynamoDBClient';
 import { DiamoryItem } from '../types/item';
@@ -17,15 +17,6 @@ const testItem: DiamoryItem = {
   checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
   payloadTimestamp: 42,
   keepOffline: true
-};
-
-const putAccount = async (): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Item: { accountId, status: 'doesNotMatter' }
-  };
-  const command = new PutCommand(params);
-  await dynamoDBClient.send(command);
 };
 
 const putItem = async (): Promise<void> => {
@@ -50,24 +41,7 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-const deleteAccount = async (): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Key: { accountId }
-  };
-  const command = new DeleteCommand(params);
-  await dynamoDBClient.send(command);
-};
-
 describe('Get Item', (): void => {
-  beforeAll(async (): Promise<void> => {
-    await putAccount();
-  });
-
-  afterAll(async (): Promise<void> => {
-    await deleteAccount();
-  });
-
   afterEach(async (): Promise<void> => {
     await deleteItem();
   });

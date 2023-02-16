@@ -46,7 +46,7 @@ const checkItem = (item: AnyItem): void => {
 const updateItem = async (Item: DiamoryItemWithAccountId, id: string, accountId: string): Promise<void> => {
   const { checksum, payloadTimestamp, keepOffline } = Item;
   const params = {
-    TableName: 'diamory-item',
+    TableName: itemTableName,
     Key: { id, accountId },
     ExpressionAttributeValues: {
       ':checksum': checksum,
@@ -69,9 +69,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       ...itemWithoutAccountId,
       accountId
     };
-    await checkItem(item);
+    checkItem(item);
     await updateItem(item, id, accountId);
-    console.log('ok');
     return {
       statusCode: 200,
       body: JSON.stringify({
