@@ -2,7 +2,8 @@ import { lambdaHandler, missingItemError } from '../../../src/functions/get-item
 import { buildTestEvent, accountId } from '../event';
 import { itemTableName } from '../constants';
 import { assert } from 'assertthat';
-import { dynamoDBClient, PutCommand, DeleteCommand } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem } from '../types/item';
 
 jest.mock('../../../src/functions/get-item/dynamoDBClient', () => {

@@ -7,7 +7,8 @@ import {
 import { buildTestEvent, accountId } from '../event';
 import { accountTableName, itemTableName } from '../constants';
 import { assert } from 'assertthat';
-import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from '../../../src/functions/add-item/item';
 import { AnyItem } from '../types/generics';
 

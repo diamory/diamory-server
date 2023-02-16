@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { dynamoDBClient, GetCommand } from './dynamoDBClient';
+import { dynamoDBClient } from './dynamoDBClient';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist';
 

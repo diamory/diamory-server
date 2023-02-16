@@ -3,7 +3,8 @@ import { buildTestEvent, accountId } from '../event';
 import { itemTableName } from '../constants';
 import { AnyItem } from '../types/generics';
 import { assert } from 'assertthat';
-import { dynamoDBClient, PutCommand, GetCommand, DeleteCommand } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem } from '../../../src/functions/update-item/item';
 
 jest.mock('../../../src/functions/update-item/dynamoDBClient', () => {

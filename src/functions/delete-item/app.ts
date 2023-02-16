@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { dynamoDBClient, GetCommand, DeleteCommand } from './dynamoDBClient';
+import { dynamoDBClient } from './dynamoDBClient';
+import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist. do add request instead';
 const notAllowedError = 'you are not allowed to do so';
