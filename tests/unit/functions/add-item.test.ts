@@ -42,9 +42,7 @@ const putAccount = async (status: string): Promise<void> => {
     Item: { accountId, status }
   };
   const command = new PutCommand(params);
-  console.log('put...');
   await dynamoDBClient.send(command);
-  console.log('put done');
 };
 
 const deleteItem = async (): Promise<void> => {
@@ -63,24 +61,19 @@ const deleteAccount = async (): Promise<void> => {
     Key: { accountId }
   };
   const command = new DeleteCommand(params);
-  console.log('delete...');
   await dynamoDBClient.send(command);
-  console.log('delete done');
 };
 
 describe('Add Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
-    console.log('afterEach');
     await deleteAccount();
   });
 
   test('returns with success on active account when item is new.', async (): Promise<void> => {
-    console.log('add item');
     await putAccount('active');
     const event = buildTestEvent('post', '/add-item', [], testItem);
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
-    console.log('add item know');
 
     const { statusCode, body } = await lambdaHandler(event);
 
