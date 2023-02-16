@@ -183,7 +183,10 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints: 
-        - app.ts
+          - app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   GetItemFunction:
     Type: AWS::Serverless::Function
@@ -209,7 +212,10 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints: 
-        - app.ts
+          - app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   UpdateItemFunction:
     Type: AWS::Serverless::Function
@@ -235,4 +241,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints: 
-        - app.ts
+          - app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
