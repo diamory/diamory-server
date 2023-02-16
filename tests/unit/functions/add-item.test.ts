@@ -103,7 +103,6 @@ describe('Add Item', (): void => {
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${itemAlreadyExistsError}`);
-    console.log({ Item });
     assert.that(Item?.payloadTimestamp).is.equalTo(testItem.payloadTimestamp);
   });
 
