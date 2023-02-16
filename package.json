@@ -11,7 +11,7 @@
   "private": true,
   "scripts": {
     "compile_": "tsc",
-    "unit_": "jest",
+    "unit_": "jest --runInBand",
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "./scripts/tests.sh",
     "deploy": "sam build && sam deploy --profile diamory",
