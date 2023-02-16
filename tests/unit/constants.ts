@@ -1,4 +1,4 @@
-const itemTableName = 'diamory-item';
 const accountTableName = 'diamory-account';
+const itemTableName = 'diamory-item';
 
-export { itemTableName, accountTableName };
+export { accountTableName, itemTableName };
