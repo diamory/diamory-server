@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 const config = {
   convertEmptyValues: true,
@@ -11,4 +11,4 @@ const config = {
 const client = new DynamoDBClient(config);
 const dynamoDBClient = DynamoDBDocumentClient.from(client);
 
-export { dynamoDBClient, PutCommand, GetCommand, DeleteCommand };
+export { dynamoDBClient, PutCommand, GetCommand, UpdateCommand, DeleteCommand };
