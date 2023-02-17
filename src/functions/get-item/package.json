@@ -1,7 +1,7 @@
 {
-  "name": "add-item",
+  "name": "get-item",
   "version": "0.1.0",
-  "description": "Lambda Function to add a payload metadata item into dynamoDB.",
+  "description": "Lambda Function to get a payload metadata item from dynamoDB.",
   "main": "app.js",
   "author": "Mark Herrmann",
   "license": "MIT",
