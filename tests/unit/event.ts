@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyEventPathParameters } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyEventPathParameters } from 'aws-lambda';
 
 interface PathParametersAndPath {
   path: string;
@@ -29,62 +29,48 @@ const buildTestEvent = (
   pathWithPlaceholders: string,
   parameters: string[],
   body: object
-): APIGatewayProxyEvent => {
+): APIGatewayProxyEventV2WithJWTAuthorizer => {
   const { path, pathParameters } = applicateParameters(pathWithPlaceholders, parameters);
   return {
-    httpMethod: method,
     body: JSON.stringify(body),
     headers: {},
     isBase64Encoded: false,
-    multiValueHeaders: {},
-    multiValueQueryStringParameters: {},
-    path,
     pathParameters,
     queryStringParameters: {},
     requestContext: {
-      accountId,
+      accountId: '42',
       apiId: '1234',
       authorizer: {
+        principalId: '',
+        integrationLatency: 0,
         jwt: {
           claims: {
-            username: 'testuser'
-          }
+            username: 'testuser',
+            sub: accountId
+          },
+          scopes: ['']
         }
       },
-      httpMethod: method,
-      identity: {
-        accessKey: '',
-        accountId: '',
-        apiKey: '',
-        apiKeyId: '',
-        caller: '',
-        clientCert: {
-          clientCertPem: '',
-          issuerDN: '',
-          serialNumber: '',
-          subjectDN: '',
-          validity: { notAfter: '', notBefore: '' }
-        },
-        cognitoAuthenticationProvider: '',
-        cognitoAuthenticationType: '',
-        cognitoIdentityId: '',
-        cognitoIdentityPoolId: '',
-        principalOrgId: '',
-        sourceIp: '',
-        user: '',
-        userAgent: '',
-        userArn: ''
-      },
-      path,
-      protocol: 'HTTP/1.1',
       requestId: 'c6af9ac6-7b61-11e6-9a41-93e8deadbeef',
-      requestTimeEpoch: 1428582896000,
-      resourceId: '123456',
-      resourcePath: path,
-      stage: 'dev'
+      stage: 'dev',
+      domainName: 'localhost',
+      domainPrefix: '',
+      routeKey: `${method} ${pathWithPlaceholders}`,
+      time: '0',
+      timeEpoch: 0,
+      http: {
+        method,
+        path,
+        protocol: 'http',
+        sourceIp: '127.0.0.1',
+        userAgent: 'jest'
+      }
     },
-    resource: '',
-    stageVariables: {}
+    stageVariables: {},
+    version: '2.0',
+    rawPath: path,
+    rawQueryString: '',
+    routeKey: `${method} ${pathWithPlaceholders}`
   };
 };
 

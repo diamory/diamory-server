@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
@@ -18,9 +18,9 @@ const getItem = async (id: string, accountId: string): Promise<AnyItem | undefin
   return responnse.Item;
 };
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
-    const { accountId } = event.requestContext;
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
     const item = await getItem(id, accountId);
     if (!item) {

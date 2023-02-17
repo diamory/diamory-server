@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
@@ -28,9 +28,9 @@ const deleteItem = async (id: string, accountId: string): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
-    const { accountId } = event.requestContext;
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
     await checkItemExists(id, accountId);
     await deleteItem(id, accountId);

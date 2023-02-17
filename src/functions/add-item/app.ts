@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
@@ -67,9 +67,9 @@ const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
-    const { accountId } = event.requestContext;
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     await checkAccount(accountId);
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     checkItem(itemWithoutAccountId as unknown as AnyItem);

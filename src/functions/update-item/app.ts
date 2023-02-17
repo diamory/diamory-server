@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
@@ -60,9 +60,9 @@ const updateItem = async (Item: DiamoryItemWithAccountId, id: string, accountId:
   await dynamoDBClient.send(command);
 };
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
-    const { accountId } = event.requestContext;
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
     await checkItemAlreadyExists(id, accountId);
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
