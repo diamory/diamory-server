@@ -21,15 +21,6 @@ const testItem: DiamoryItem = {
   keepOffline: true
 };
 
-const putAccount = async (status: string): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Item: { accountId, status }
-  };
-  const command = new PutCommand(params);
-  await dynamoDBClient.send(command);
-};
-
 const getItem = async (): Promise<AnyItem | undefined> => {
   const { id } = testItem;
   const params = {
@@ -63,24 +54,13 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-const deleteAccount = async (): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Key: { accountId }
-  };
-  const command = new DeleteCommand(params);
-  await dynamoDBClient.send(command);
-};
-
 describe('Delete Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
-    await deleteAccount();
   });
 
   test('returns with success when existent item is deleted.', async (): Promise<void> => {
     await putItem();
-    await putAccount('active');
     const { id } = testItem;
     const event = buildTestEvent('delete', '/delete-item/{id}', [id], {});
 
@@ -95,7 +75,6 @@ describe('Delete Item', (): void => {
 
   test('returns with error due to missing item.', async (): Promise<void> => {
     await putItem();
-    await putAccount('active');
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
     const event = buildTestEvent('delete', '/delete-item/{id}', ['missing'], {});
 
@@ -115,27 +94,6 @@ describe('Delete Item', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    await putItem();
-    await putAccount('suspended');
-    const { id, checksum, payloadTimestamp, keepOffline } = testItem;
-    const event = buildTestEvent('delete', '/deleted-item/{id}', [id], {});
-
-    const { statusCode, body } = await lambdaHandler(event);
-
-    const Item = await getItem();
-    const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
-    assert.that(Item).is.not.undefined();
-    assert.that(Item).is.not.null();
-    assert.that(Item?.id).is.equalTo(id);
-    assert.that(Item?.checksum).is.equalTo(checksum);
-    assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
-    assert.that(Item?.keepOffline).is.equalTo(keepOffline);
-    assert.that(Item?.accountId).is.equalTo(accountId);
-  });
-
-  test('returns with error on missing account.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
     const event = buildTestEvent('delete', '/deleted-item/{id}', [id], {});

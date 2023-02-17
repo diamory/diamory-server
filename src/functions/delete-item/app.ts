@@ -7,22 +7,6 @@ const notAllowedError = 'you are not allowed to do so';
 
 const itemTableName = 'diamory-item';
 
-const checkAccount = async (accountId: string): Promise<void> => {
-  const params = {
-    Key: { accountId },
-    TableName: 'diamory-account'
-  };
-  const command = new GetCommand(params);
-  const { Item } = await dynamoDBClient.send(command);
-
-  if (!Item) {
-    throw new Error(notAllowedError);
-  }
-  if (Item.status !== 'active') {
-    throw new Error(notAllowedError);
-  }
-};
-
 const checkItemExists = async (id: string, accountId: string): Promise<void> => {
   const params = {
     TableName: itemTableName,
@@ -47,7 +31,6 @@ const deleteItem = async (id: string, accountId: string): Promise<void> => {
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const { accountId } = event.requestContext;
-    await checkAccount(accountId);
     const id = event.pathParameters?.id ?? '';
     await checkItemExists(id, accountId);
     await deleteItem(id, accountId);
