@@ -174,7 +174,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /put-item
+            Path: /add-item
             Method: post
     Metadata:
       BuildMethod: esbuild
