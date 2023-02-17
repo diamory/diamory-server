@@ -1,6 +1,6 @@
-import { lambdaHandler, missingItemError, notAllowedError } from '../../../src/functions/delete-item/app';
+import { lambdaHandler, missingItemError } from '../../../src/functions/delete-item/app';
 import { buildTestEvent, accountId } from '../event';
-import { accountTableName, itemTableName } from '../constants';
+import { itemTableName } from '../constants';
 import { AnyItem } from '../types/generics';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../localRes/dynamoDBClient';
