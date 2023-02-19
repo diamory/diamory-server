@@ -14,8 +14,12 @@ const getItem = async (id: string, accountId: string): Promise<AnyItem | undefin
     Key: { id, accountId }
   };
   const command = new GetCommand(params);
-  const responnse = await dynamoDBClient.send(command);
-  return responnse.Item;
+  try {
+    const responnse = await dynamoDBClient.send(command);
+    return responnse.Item;
+  } catch {
+    throw new Error(missingItemError);
+  }
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {

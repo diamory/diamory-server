@@ -5,34 +5,28 @@ import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 const missingItemError = 'this item does not exist. do add request instead';
 const notAllowedError = 'you are not allowed to do so';
 
-const itemTableName = 'diamory-item';
-
-const checkItemExists = async (id: string, accountId: string): Promise<void> => {
-  const params = {
-    TableName: itemTableName,
-    Key: { id, accountId }
-  };
-  const command = new GetCommand(params);
-  const result = await dynamoDBClient.send(command);
-  if (!(result?.Item?.id === id)) {
-    throw new Error(missingItemError);
-  }
-};
-
 const deleteItem = async (id: string, accountId: string): Promise<void> => {
   const params = {
-    TableName: itemTableName,
-    Key: { id, accountId }
+    TableName: 'diamory-item',
+    Key: { id, accountId },
+    ExpressionAttributeValues: {
+      ':id': id,
+      ':accountId': accountId
+    },
+    ConditionExpression: 'id = :id and accountId = :accountId'
   };
   const command = new DeleteCommand(params);
-  await dynamoDBClient.send(command);
+  try {
+    await dynamoDBClient.send(command);
+  } catch {
+    throw new Error(missingItemError);
+  }
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
-    await checkItemExists(id, accountId);
     await deleteItem(id, accountId);
     return {
       statusCode: 200,

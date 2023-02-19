@@ -12,18 +12,6 @@ interface AnyItem {
   [key: string]: unknown;
 }
 
-const checkItemAlreadyExists = async (id: string, accountId: string): Promise<void> => {
-  const params = {
-    TableName: itemTableName,
-    Key: { id, accountId }
-  };
-  const command = new GetCommand(params);
-  const result = await dynamoDBClient.send(command);
-  if (!(result?.Item?.id === id)) {
-    throw new Error(missingItemError);
-  }
-};
-
 const checkItem = (item: AnyItem): void => {
   const required = {
     id: 'string',
@@ -52,19 +40,25 @@ const updateItem = async (Item: DiamoryItemWithAccountId, id: string, accountId:
     ExpressionAttributeValues: {
       ':checksum': checksum,
       ':payloadTimestamp': payloadTimestamp,
-      ':keepOffline': keepOffline
+      ':keepOffline': keepOffline,
+      ':id': id,
+      ':accountId': accountId
     },
+    ConditionExpression: 'id = :id and accountId = :accountId',
     UpdateExpression: 'set checksum = :checksum, payloadTimestamp = :payloadTimestamp, keepOffline = :keepOffline'
   };
   const command = new UpdateCommand(params);
-  await dynamoDBClient.send(command);
+  try {
+    await dynamoDBClient.send(command);
+  } catch {
+    throw new Error(missingItemError);
+  }
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
-    await checkItemAlreadyExists(id, accountId);
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     const item = {
       ...itemWithoutAccountId,
