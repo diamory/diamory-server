@@ -5,6 +5,12 @@ import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
 const missingItemError = 'this item does not exist. do add request instead';
 const notAllowedError = 'you are not allowed to do so';
 
+const checkAccountStatus = (status: string, requiredStatus: string): void => {
+  if (status !== requiredStatus) {
+    throw new Error(notAllowedError);
+  }
+};
+
 const deleteItem = async (id: string, accountId: string): Promise<void> => {
   const params = {
     TableName: 'diamory-item',
@@ -26,6 +32,8 @@ const deleteItem = async (id: string, accountId: string): Promise<void> => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
+    const status: string = event.requestContext.authorizer.jwt.claims.status as string;
+    checkAccountStatus(status, 'active');
     const id = event.pathParameters?.id ?? '';
     await deleteItem(id, accountId);
     return {

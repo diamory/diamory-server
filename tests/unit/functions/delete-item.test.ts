@@ -1,4 +1,4 @@
-import { lambdaHandler, missingItemError } from '../../../src/functions/delete-item/app';
+import { lambdaHandler, missingItemError, notAllowedError } from '../../../src/functions/delete-item/app';
 import { buildTestEvent, accountId } from '../event';
 import { AnyItem } from '../types/generics';
 import { assert } from 'assertthat';
@@ -84,6 +84,25 @@ describe('Delete Item', (): void => {
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
+    assert.that(Item).is.not.undefined();
+    assert.that(Item).is.not.null();
+    assert.that(Item?.id).is.equalTo(id);
+    assert.that(Item?.checksum).is.equalTo(checksum);
+    assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
+    assert.that(Item?.accountId).is.equalTo(accountId);
+  });
+
+  test('returns with error on suspended account.', async (): Promise<void> => {
+    await putItem();
+    const { id, checksum, payloadTimestamp } = testItem;
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'suspended');
+
+    const { statusCode, body } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(500);
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item?.id).is.equalTo(id);

@@ -5,12 +5,19 @@ import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
 const invalidItemError = 'invalid item';
+const notAllowedError = 'you are not allowed to do so';
 
 const itemTableName = 'diamory-item';
 
 interface AnyItem {
   [key: string]: unknown;
 }
+
+const checkAccountStatus = (status: string, requiredStatus: string): void => {
+  if (status !== requiredStatus) {
+    throw new Error(notAllowedError);
+  }
+};
 
 const checkItem = (item: AnyItem): void => {
   const required = {
@@ -56,6 +63,8 @@ const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Pr
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
+    const status: string = event.requestContext.authorizer.jwt.claims.status as string;
+    checkAccountStatus(status, 'active');
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     const item = {
       ...itemWithoutAccountId,
@@ -81,4 +90,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, missingItemError, invalidItemError };
+export { lambdaHandler, missingItemError, invalidItemError, notAllowedError };
