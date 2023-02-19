@@ -69,7 +69,7 @@ describe('Update Item', (): void => {
   test('returns with success when existent item is modified.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = modifiedItem;
-    const event = buildTestEvent('put', '/update-item/{id}', [id], modifiedItem);
+    const event = buildTestEvent('put', '/item', [], modifiedItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -87,8 +87,7 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
-    const { id } = modifiedItem;
-    const event = buildTestEvent('put', '/update-item/{id}', [id], modifiedItem);
+    const event = buildTestEvent('put', '/item', [], modifiedItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -102,7 +101,7 @@ describe('Update Item', (): void => {
   test('returns with error on invalid item.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
-    const event = buildTestEvent('post', '/update-item/{id}', [id], {});
+    const event = buildTestEvent('post', '/item', [], {});
 
     const { statusCode, body } = await lambdaHandler(event);
 

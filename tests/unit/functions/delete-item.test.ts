@@ -62,7 +62,7 @@ describe('Delete Item', (): void => {
   test('returns with success when existent item is deleted.', async (): Promise<void> => {
     await putItem();
     const { id } = testItem;
-    const event = buildTestEvent('delete', '/delete-item/{id}', [id], {});
+    const event = buildTestEvent('delete', '/item/{id}', [id], {});
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -76,7 +76,7 @@ describe('Delete Item', (): void => {
   test('returns with error due to missing item.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
-    const event = buildTestEvent('delete', '/delete-item/{id}', ['missing'], {});
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {});
 
     const { statusCode, body } = await lambdaHandler(event);
 

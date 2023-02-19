@@ -75,7 +75,7 @@ describe('Add Payload', (): void => {
     await putAccount('active');
     const event = buildTestEvent(
       'post',
-      'add-payload/{checksum}',
+      'payload/{checksum}',
       [testChecksum],
       Buffer.from(testBody).toString('base64'),
       true
@@ -94,7 +94,7 @@ describe('Add Payload', (): void => {
     await putAccount('active');
     const event = buildTestEvent(
       'post',
-      'add-payload/{checksum}',
+      'payload/{checksum}',
       ['invalid'],
       Buffer.from(testBody).toString('base64'),
       true
@@ -113,7 +113,7 @@ describe('Add Payload', (): void => {
     await putAccount('suspended');
     const event = buildTestEvent(
       'post',
-      'add-payload/{checksum}',
+      'payload/{checksum}',
       [testChecksum],
       Buffer.from(testBody).toString('base64'),
       true
@@ -131,7 +131,7 @@ describe('Add Payload', (): void => {
   test('returns with error on missing account.', async (): Promise<void> => {
     const event = buildTestEvent(
       'post',
-      'add-payload/{checksum}',
+      'payload/{checksum}',
       [testChecksum],
       Buffer.from(testBody).toString('base64'),
       true

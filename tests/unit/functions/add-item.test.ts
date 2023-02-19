@@ -73,7 +73,7 @@ describe('Add Item', (): void => {
 
   test('returns with success on active account when item is new.', async (): Promise<void> => {
     await putAccount('active');
-    const event = buildTestEvent('post', '/add-item', [], testItem);
+    const event = buildTestEvent('post', '/item', [], testItem);
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -93,7 +93,7 @@ describe('Add Item', (): void => {
 
   test('returns with error when item already exists.', async (): Promise<void> => {
     await putAccount('active');
-    const addEvent = buildTestEvent('post', '/add-item', [], testItem);
+    const addEvent = buildTestEvent('post', '/item', [], testItem);
     await lambdaHandler(addEvent);
     const modifiedItem = { ...testItem, payloadTimestamp: 96 };
     const updateEvent = buildTestEvent('post', '/add-item', [], modifiedItem);
@@ -109,7 +109,7 @@ describe('Add Item', (): void => {
 
   test('returns with error on suspended account.', async (): Promise<void> => {
     await putAccount('suspended');
-    const event = buildTestEvent('post', '/add-item', [], testItem);
+    const event = buildTestEvent('post', '/item', [], testItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -121,7 +121,7 @@ describe('Add Item', (): void => {
   });
 
   test('returns with error on missing account.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/add-item', [], testItem);
+    const event = buildTestEvent('post', '/item', [], testItem);
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -134,7 +134,7 @@ describe('Add Item', (): void => {
 
   test('returns with error on invalid item.', async (): Promise<void> => {
     await putAccount('active');
-    const event = buildTestEvent('post', '/add-item', [], {});
+    const event = buildTestEvent('post', '/item', [], {});
 
     const { statusCode, body } = await lambdaHandler(event);
 

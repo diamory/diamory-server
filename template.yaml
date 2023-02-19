@@ -177,7 +177,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /add-item
+            Path: /item
             Method: post
     Metadata:
       BuildMethod: esbuild
@@ -206,7 +206,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /get-item/{id}
+            Path: /item/{id}
             Method: get
     Metadata:
       BuildMethod: esbuild
@@ -235,7 +235,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /update-item/{id}
+            Path: /item
             Method: put
     Metadata:
       BuildMethod: esbuild
@@ -264,7 +264,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /delete-item/{id}
+            Path: /item/{id}
             Method: delete
     Metadata:
       BuildMethod: esbuild
@@ -293,7 +293,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /add-payload/{checksum}
+            Path: /payload/{checksum}
             Method: post
     Metadata:
       BuildMethod: esbuild

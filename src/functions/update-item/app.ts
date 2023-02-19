@@ -32,8 +32,8 @@ const checkItem = (item: AnyItem): void => {
   }
 };
 
-const updateItem = async (Item: DiamoryItemWithAccountId, id: string, accountId: string): Promise<void> => {
-  const { checksum, payloadTimestamp, keepOffline } = Item;
+const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Promise<void> => {
+  const { id, checksum, payloadTimestamp, keepOffline } = Item;
   const params = {
     TableName: itemTableName,
     Key: { id, accountId },
@@ -58,14 +58,13 @@ const updateItem = async (Item: DiamoryItemWithAccountId, id: string, accountId:
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const id = event.pathParameters?.id ?? '';
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     const item = {
       ...itemWithoutAccountId,
       accountId
     };
     checkItem(item);
-    await updateItem(item, id, accountId);
+    await updateItem(item, accountId);
     return {
       statusCode: 200,
       body: JSON.stringify({
