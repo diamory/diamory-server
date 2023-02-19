@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
