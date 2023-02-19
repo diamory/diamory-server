@@ -72,8 +72,11 @@ Resources:
                 Action: "dynamodb:*"
                 Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-*"
               - Effect: Allow
-                Action: "s3:*"
-                Resource: "arn:aws:s3:::diamory-s3-bucket"
+                Action:
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:DeleteObject"
+                Resource: "arn:aws:s3:::diamory-s3-bucket/*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -272,5 +275,35 @@ Resources:
         EntryPoints: 
           - app.ts
         External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+  AddPayloadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/functions/add-payload
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /add-payload/{checksum}
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-s3"
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
