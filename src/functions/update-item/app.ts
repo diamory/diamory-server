@@ -16,14 +16,13 @@ const checkItem = (item: AnyItem): void => {
   const required = {
     id: 'string',
     checksum: 'string',
-    payloadTimestamp: 'number',
-    keepOffline: 'boolean'
+    payloadTimestamp: 'number'
   };
   for (const [key, value] of Object.entries(required)) {
     if (!(key in item) || typeof item[key] !== value) {
       throw new Error(invalidItemError);
     }
-    if (key !== 'keepOffline' && !item[key]) {
+    if (!item[key]) {
       throw new Error(invalidItemError);
     }
   }
@@ -33,19 +32,18 @@ const checkItem = (item: AnyItem): void => {
 };
 
 const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Promise<void> => {
-  const { id, checksum, payloadTimestamp, keepOffline } = Item;
+  const { id, checksum, payloadTimestamp } = Item;
   const params = {
     TableName: itemTableName,
     Key: { id, accountId },
     ExpressionAttributeValues: {
       ':checksum': checksum,
       ':payloadTimestamp': payloadTimestamp,
-      ':keepOffline': keepOffline,
       ':id': id,
       ':accountId': accountId
     },
     ConditionExpression: 'id = :id and accountId = :accountId',
-    UpdateExpression: 'set checksum = :checksum, payloadTimestamp = :payloadTimestamp, keepOffline = :keepOffline'
+    UpdateExpression: 'set checksum = :checksum, payloadTimestamp = :payloadTimestamp'
   };
   const command = new UpdateCommand(params);
   try {

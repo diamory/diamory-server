@@ -18,8 +18,7 @@ const itemTableName = 'diamory-item';
 const testItem: DiamoryItem = {
   id: 'id',
   checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
-  payloadTimestamp: 42,
-  keepOffline: true
+  payloadTimestamp: 42
 };
 
 const getItem = async (): Promise<AnyItem | undefined> => {
@@ -76,7 +75,7 @@ describe('Delete Item', (): void => {
 
   test('returns with error due to missing item.', async (): Promise<void> => {
     await putItem();
-    const { id, checksum, payloadTimestamp, keepOffline } = testItem;
+    const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -90,7 +89,6 @@ describe('Delete Item', (): void => {
     assert.that(Item?.id).is.equalTo(id);
     assert.that(Item?.checksum).is.equalTo(checksum);
     assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
-    assert.that(Item?.keepOffline).is.equalTo(keepOffline);
     assert.that(Item?.accountId).is.equalTo(accountId);
   });
 });

@@ -17,8 +17,7 @@ const itemTableName = 'diamory-item';
 const testItem: DiamoryItem = {
   id: 'id',
   checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
-  payloadTimestamp: 42,
-  keepOffline: true
+  payloadTimestamp: 42
 };
 
 const putItem = async (): Promise<void> => {
@@ -50,7 +49,7 @@ describe('Get Item', (): void => {
 
   test('returns item.', async (): Promise<void> => {
     await putItem();
-    const { id, checksum, payloadTimestamp, keepOffline } = testItem;
+    const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('get', '/item/{id}', [id], {}, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -63,7 +62,6 @@ describe('Get Item', (): void => {
     assert.that(item.id).is.equalTo(id);
     assert.that(item.checksum).is.equalTo(checksum);
     assert.that(item.payloadTimestamp).is.equalTo(payloadTimestamp);
-    assert.that(item.keepOffline).is.equalTo(keepOffline);
     assert.that(item.accountId).is.undefined();
   });
 

@@ -18,15 +18,13 @@ const itemTableName = 'diamory-item';
 const testItem: DiamoryItem = {
   id: 'id',
   checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
-  payloadTimestamp: 42,
-  keepOffline: true
+  payloadTimestamp: 42
 };
 
 const modifiedItem: DiamoryItem = {
   id: 'id',
   checksum: 'a17317b40a568e8da8a045ced110137e159f890ac4da883b6b17dc651ba17317',
-  payloadTimestamp: 96,
-  keepOffline: false
+  payloadTimestamp: 96
 };
 
 const getItem = async (): Promise<AnyItem | undefined> => {
@@ -69,7 +67,7 @@ describe('Update Item', (): void => {
 
   test('returns with success when existent item is modified.', async (): Promise<void> => {
     await putItem();
-    const { id, checksum, payloadTimestamp, keepOffline } = modifiedItem;
+    const { id, checksum, payloadTimestamp } = modifiedItem;
     const event = buildTestEvent('put', '/item', [], modifiedItem, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -83,7 +81,6 @@ describe('Update Item', (): void => {
     assert.that(Item?.id).is.equalTo(id);
     assert.that(Item?.checksum).is.equalTo(checksum);
     assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
-    assert.that(Item?.keepOffline).is.equalTo(keepOffline);
     assert.that(Item?.accountId).is.equalTo(accountId);
   });
 
@@ -101,7 +98,7 @@ describe('Update Item', (): void => {
 
   test('returns with error on invalid item.', async (): Promise<void> => {
     await putItem();
-    const { id, checksum, payloadTimestamp, keepOffline } = testItem;
+    const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('post', '/item', [], {}, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
@@ -115,7 +112,6 @@ describe('Update Item', (): void => {
     assert.that(Item?.id).is.equalTo(id);
     assert.that(Item?.checksum).is.equalTo(checksum);
     assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
-    assert.that(Item?.keepOffline).is.equalTo(keepOffline);
     assert.that(Item?.accountId).is.equalTo(accountId);
   });
 });

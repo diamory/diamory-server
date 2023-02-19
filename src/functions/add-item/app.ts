@@ -21,14 +21,13 @@ const checkItem = (item: AnyItem): void => {
   const required = {
     id: 'string',
     checksum: 'string',
-    payloadTimestamp: 'number',
-    keepOffline: 'boolean'
+    payloadTimestamp: 'number'
   };
   for (const [key, value] of Object.entries(required)) {
     if (!(key in item) || typeof item[key] !== value) {
       throw new Error(invalidItemError);
     }
-    if (key !== 'keepOffline' && !item[key]) {
+    if (!item[key]) {
       throw new Error(invalidItemError);
     }
   }
