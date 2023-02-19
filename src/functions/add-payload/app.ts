@@ -1,24 +1,12 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { s3Client } from './s3Client';
-import { dynamoDBClient } from './dynamoDBClient';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const notAllowedError = 'you are not allowed to do so';
 const invalidChecksumError = 'invalid checksum';
 
-const checkAccount = async (accountId: string): Promise<void> => {
-  const params = {
-    Key: { accountId },
-    TableName: 'diamory-account'
-  };
-  const command = new GetCommand(params);
-  const { Item } = await dynamoDBClient.send(command);
-
-  if (!Item) {
-    throw new Error(notAllowedError);
-  }
-  if (Item.status !== 'active') {
+const checkAccountStatus = (status: string, requiredStatus: string): void => {
+  if (status !== requiredStatus) {
     throw new Error(notAllowedError);
   }
 };
@@ -43,7 +31,8 @@ const addPayload = async (accountId: string, checksum: string, Body: Buffer): Pr
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    await checkAccount(accountId);
+    const status: string = event.requestContext.authorizer.jwt.claims.status as string;
+    checkAccountStatus(status, 'active');
     const checksum = event.pathParameters?.checksum ?? '';
     checkChecksum(checksum);
     const body = Buffer.from(event.body ?? '', 'base64');

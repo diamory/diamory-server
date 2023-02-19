@@ -11,12 +11,26 @@ Globals:
 
 Resources:
 
+  # TODO: define SES for mailing
+
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: "diamory-user-pool"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
+      UsernameAttributes:
+        - "email"
+      UsernameConfiguration:
+        CaseSensitive: true
+      AutoVerifiedAttributes:
+        - "email"
+      Schema: # TODO: define more later (credits, expires, etc.) (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-schemaattribute.html)
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: true
+          Mutable: true
+          Required: false
+          Name: "status"
       Policies:
         PasswordPolicy:
           MinimumLength: 16
@@ -24,6 +38,14 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
           RequireUppercase: true
+      # TODO: finish following settings
+      # EmailConfiguration:
+        # EmailSendingAccount: DEVELOPER
+        # define later: ConfigurationSet, From, ReplyToEmailAddress, SourceArn)
+        ## (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-emailconfiguration.html)
+      # VerificationMessageTemplate: define this later
+      ## (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-verificationmessagetemplate.html)
+
   
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -47,7 +69,7 @@ Resources:
   UserPoolDomain: 
     Type: AWS::Cognito::UserPoolDomain 
     Properties:
-      UserPoolId: !Ref UserPool 
+      UserPoolId: !Ref UserPool
       Domain: "diamory-user"
 
   ExecutionRole:
@@ -70,7 +92,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: "dynamodb:*"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-*"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item"
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
@@ -146,21 +168,7 @@ Resources:
           Projection:
             NonKeyAttributes:
               - "checksum"
-              - "keepOffline"
             ProjectionType: "INCLUDE"
-
-  AccountTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: "diamory-account"
-      TableClass: "STANDARD"
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: "accountId"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "accountId"
-          KeyType: "HASH"
 
   AddItemFunction:
     Type: AWS::Serverless::Function
@@ -305,5 +313,3 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"

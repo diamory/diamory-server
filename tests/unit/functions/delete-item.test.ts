@@ -1,6 +1,5 @@
 import { lambdaHandler, missingItemError } from '../../../src/functions/delete-item/app';
 import { buildTestEvent, accountId } from '../event';
-import { itemTableName } from '../constants';
 import { AnyItem } from '../types/generics';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../localRes/dynamoDBClient';
@@ -13,6 +12,8 @@ jest.mock('../../../src/functions/delete-item/dynamoDBClient', () => {
     ...originalModule
   };
 });
+
+const itemTableName = 'diamory-item';
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -62,7 +63,7 @@ describe('Delete Item', (): void => {
   test('returns with success when existent item is deleted.', async (): Promise<void> => {
     await putItem();
     const { id } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', [id], {});
+    const event = buildTestEvent('delete', '/item/{id}', [id], {}, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -76,7 +77,7 @@ describe('Delete Item', (): void => {
   test('returns with error due to missing item.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp, keepOffline } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {});
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
 
