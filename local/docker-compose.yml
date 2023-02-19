@@ -15,7 +15,7 @@ services:
     environment:
       - MINIO_ACCESS_KEY=ALEXIAFOLEYS7EXAMPLE
       - MINIO_SECRET_KEY=w1asrXU1nFwMI/K7MDGNG/bPxRfyCYEXAMPLEKEY
-      - MINIO_REGION_NAME=de
+      - MINIO_REGION_NAME=local
     command: server /data
     hostname: localhost
     ports:

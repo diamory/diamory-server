@@ -1,0 +1,13 @@
+{
+  "name": "add-payload",
+  "version": "0.1.0",
+  "description": "Lambda Function to add a payload object into s3 bucket.",
+  "main": "app.js",
+  "author": "Mark Herrmann",
+  "license": "MIT",
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.272.0",
+    "@aws-sdk/client-s3": "3.272.0",
+    "@aws-sdk/lib-dynamodb": "3.272.0"
+  }
+}

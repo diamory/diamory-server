@@ -15,7 +15,7 @@ then
     echo "[profile $PROFILE]"
     echo "aws_access_key_id = ALEXIAFOLEYS7EXAMPLE"
     printf 'aws_secret_access_key = w1asrXU1nFwMI/K7MDGNG/bPxRfyCYEXAMPLEKEY\n'
-    echo "region = de"
+    echo "region = local"
     echo ""
   } >>$CONFIG_FILE
 fi
