@@ -88,10 +88,10 @@ Resources:
   #    ██   ██ ██           ██       ██   ██ ██      ██      ██           ██      ██ 
   #    ██   ██ ███████ ███████       ██   ██  ██████  ██████ ███████ ███████ ███████
 
-  ExecutionRole:
+  ExecutionRoleWithDynamoDBAccess:
     Type: AWS::IAM::Role
     Properties: 
-      RoleName: "diamory-user-execution-role"
+      RoleName: "diamory-user-execution-role-with-dynamodb-access"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -102,13 +102,40 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: "diamory-user-execution-role-policy"
+        - PolicyName: "diamory-user-execution-role-policy-with-dynamodb-access"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: "dynamodb:*"
                 Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:eu-central-1:*:*"
+              - Effect: Allow
+                Action: "logs:CreateLogGroup"
+                Resource: "*"
+
+  ExecutionRoleWithS3Access:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName: "diamory-user-execution-role-with-s3-access"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "diamory-user-execution-role-policy-with-s3-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
@@ -222,7 +249,7 @@ Resources:
       CodeUri: src/functions/items/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -251,7 +278,7 @@ Resources:
       CodeUri: src/functions/items/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -280,7 +307,7 @@ Resources:
       CodeUri: src/functions/items/update-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -309,7 +336,7 @@ Resources:
       CodeUri: src/functions/items/delete-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -346,7 +373,7 @@ Resources:
       CodeUri: src/functions/payloads/add-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithS3Access.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -374,7 +401,7 @@ Resources:
       CodeUri: src/functions/payloads/get-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithS3Access.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -402,7 +429,7 @@ Resources:
       CodeUri: src/functions/payloads/replace-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithS3Access.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -430,7 +457,7 @@ Resources:
       CodeUri: src/functions/payloads/delete-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
+      Role: !GetAtt ExecutionRoleWithS3Access.Arn
       MemorySize: 128
       Architectures:
         - x86_64
