@@ -34,7 +34,7 @@ const deletePayload = async (): Promise<void> => {
   await s3Client.send(command);
 };
 
-describe('Delete Payload', (): void => {
+describe('Get Payload', (): void => {
   beforeEach(async (): Promise<void> => {
     await putPayload();
   });
