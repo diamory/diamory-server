@@ -219,7 +219,7 @@ Resources:
   AddItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/add-item
+      CodeUri: src/functions/items/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -248,7 +248,7 @@ Resources:
   GetItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/get-item
+      CodeUri: src/functions/items/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -277,7 +277,7 @@ Resources:
   UpdateItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/update-item
+      CodeUri: src/functions/items/update-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -306,7 +306,7 @@ Resources:
   DeleteItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/delete-item
+      CodeUri: src/functions/items/delete-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -343,7 +343,7 @@ Resources:
   AddPayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/add-payload
+      CodeUri: src/functions/payloads/add-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -371,7 +371,7 @@ Resources:
   GetPayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/get-payload
+      CodeUri: src/functions/payloads/get-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -399,7 +399,7 @@ Resources:
   ReplacePayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/replace-payload
+      CodeUri: src/functions/payloads/replace-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -427,7 +427,7 @@ Resources:
   DeletePayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/functions/delete-payload
+      CodeUri: src/functions/payloads/delete-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn

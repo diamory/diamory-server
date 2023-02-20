@@ -1,12 +1,12 @@
-import { lambdaHandler, missingItemError } from '../../../src/functions/get-item/app';
-import { buildTestEvent, accountId } from '../event';
+import { lambdaHandler, missingItemError } from '../../../../src/functions/items/get-item/app';
+import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
-import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem } from '../types/item';
+import { DiamoryItem } from '../../types/item';
 
-jest.mock('../../../src/functions/get-item/dynamoDBClient', () => {
-  const originalModule = jest.requireActual('../localRes/dynamoDBClient');
+jest.mock('../../../../src/functions/items/get-item/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
   return {
     ...originalModule
   };

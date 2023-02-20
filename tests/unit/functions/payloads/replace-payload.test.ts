@@ -3,14 +3,14 @@ import {
   notAllowedError,
   invalidOldChecksumError,
   invalidNewChecksumError
-} from '../../../src/functions/replace-payload/app';
-import { buildTestEvent, accountId } from '../event';
+} from '../../../../src/functions/payloads/replace-payload/app';
+import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
-import { s3Client } from '../localRes/s3Client';
+import { s3Client } from '../../localRes/s3Client';
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-jest.mock('../../../src/functions/replace-payload/s3Client', () => {
-  const originalModule = jest.requireActual('../localRes/s3Client');
+jest.mock('../../../../src/functions/payloads/replace-payload/s3Client', () => {
+  const originalModule = jest.requireActual('../../localRes/s3Client');
   return {
     ...originalModule
   };

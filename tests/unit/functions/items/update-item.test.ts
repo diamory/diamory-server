@@ -1,13 +1,18 @@
-import { lambdaHandler, missingItemError, notAllowedError } from '../../../src/functions/delete-item/app';
-import { buildTestEvent, accountId } from '../event';
-import { AnyItem } from '../types/generics';
+import {
+  lambdaHandler,
+  missingItemError,
+  invalidItemError,
+  notAllowedError
+} from '../../../../src/functions/items/update-item/app';
+import { buildTestEvent, accountId } from '../../event';
+import { AnyItem } from '../../types/generics';
 import { assert } from 'assertthat';
-import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem } from '../types/item';
+import { DiamoryItem } from '../../../../src/functions/items/update-item/item';
 
-jest.mock('../../../src/functions/delete-item/dynamoDBClient', () => {
-  const originalModule = jest.requireActual('../localRes/dynamoDBClient');
+jest.mock('../../../../src/functions/items/update-item/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
   return {
     ...originalModule
   };
@@ -19,6 +24,12 @@ const testItem: DiamoryItem = {
   id: 'id',
   checksum: '73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049',
   payloadTimestamp: 42
+};
+
+const modifiedItem: DiamoryItem = {
+  id: 'id',
+  checksum: 'a17317b40a568e8da8a045ced110137e159f890ac4da883b6b17dc651ba17317',
+  payloadTimestamp: 96
 };
 
 const getItem = async (): Promise<AnyItem | undefined> => {
@@ -54,15 +65,15 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
-describe('Delete Item', (): void => {
+describe('Update Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
   });
 
-  test('returns with success when existent item is deleted.', async (): Promise<void> => {
+  test('returns with success when existent item is modified.', async (): Promise<void> => {
     await putItem();
-    const { id } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', [id], {}, false, 'active');
+    const { id, checksum, payloadTimestamp } = modifiedItem;
+    const event = buildTestEvent('put', '/item', [], modifiedItem, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -70,13 +81,16 @@ describe('Delete Item', (): void => {
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(200);
     assert.that(message).is.equalTo('ok');
-    assert.that(Item).is.undefined();
+    assert.that(Item).is.not.undefined();
+    assert.that(Item).is.not.null();
+    assert.that(Item?.id).is.equalTo(id);
+    assert.that(Item?.checksum).is.equalTo(checksum);
+    assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
+    assert.that(Item?.accountId).is.equalTo(accountId);
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
-    await putItem();
-    const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'active');
+    const event = buildTestEvent('put', '/item', [], modifiedItem, false, 'active');
 
     const { statusCode, body } = await lambdaHandler(event);
 
@@ -84,6 +98,20 @@ describe('Delete Item', (): void => {
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
+    assert.that(Item).is.undefined();
+  });
+
+  test('returns with error on invalid item.', async (): Promise<void> => {
+    await putItem();
+    const { id, checksum, payloadTimestamp } = testItem;
+    const event = buildTestEvent('post', '/item', [], {}, false, 'active');
+
+    const { statusCode, body } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(500);
+    assert.that(message).is.equalTo(`some error happened: ${invalidItemError}`);
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item?.id).is.equalTo(id);
@@ -95,7 +123,7 @@ describe('Delete Item', (): void => {
   test('returns with error on suspended account.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'suspended');
+    const event = buildTestEvent('post', '/item', [], modifiedItem, false, 'suspended');
 
     const { statusCode, body } = await lambdaHandler(event);
 

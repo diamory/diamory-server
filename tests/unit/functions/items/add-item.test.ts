@@ -3,16 +3,16 @@ import {
   notAllowedError,
   invalidItemError,
   itemAlreadyExistsError
-} from '../../../src/functions/add-item/app';
-import { buildTestEvent, accountId } from '../event';
+} from '../../../../src/functions/items/add-item/app';
+import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
-import { dynamoDBClient } from '../localRes/dynamoDBClient';
+import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem, DiamoryItemWithAccountId } from '../../../src/functions/add-item/item';
-import { AnyItem } from '../types/generics';
+import { DiamoryItem, DiamoryItemWithAccountId } from '../../../../src/functions/items/add-item/item';
+import { AnyItem } from '../../types/generics';
 
-jest.mock('../../../src/functions/add-item/dynamoDBClient', () => {
-  const originalModule = jest.requireActual('../localRes/dynamoDBClient');
+jest.mock('../../../../src/functions/items/add-item/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
   return {
     ...originalModule
   };

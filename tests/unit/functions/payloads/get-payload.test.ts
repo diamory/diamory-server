@@ -1,11 +1,15 @@
-import { lambdaHandler, payloadDoesNotExistError, invalidChecksumError } from '../../../src/functions/get-payload/app';
-import { buildTestEvent, accountId } from '../event';
+import {
+  lambdaHandler,
+  payloadDoesNotExistError,
+  invalidChecksumError
+} from '../../../../src/functions/payloads/get-payload/app';
+import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
-import { s3Client } from '../localRes/s3Client';
+import { s3Client } from '../../localRes/s3Client';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
-jest.mock('../../../src/functions/get-payload/s3Client', () => {
-  const originalModule = jest.requireActual('../localRes/s3Client');
+jest.mock('../../../../src/functions/payloads/get-payload/s3Client', () => {
+  const originalModule = jest.requireActual('../../localRes/s3Client');
   return {
     ...originalModule
   };
