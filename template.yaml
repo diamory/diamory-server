@@ -68,9 +68,9 @@ Resources:
         - "profile"
         - "openid"
       CallbackURLs:
-        - "https://diamory.de?callback"
+        - "https://api.diamory.de?callback"
       LogoutURLs:
-        - "https://diamory.de?logout"
+        - "https://api.diamory.de?logout"
       SupportedIdentityProviders:
         - "COGNITO"
       
@@ -159,6 +159,15 @@ Resources:
   #    ██   ██ ██      ██ 
   #    ██   ██ ██      ██
 
+  ApiDomainCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: "api.diamory.de"
+      DomainValidationOptions:
+        - DomainName: "api.diamory.de"
+          HostedZoneId: "Z02112923J7IQK3X4KU7D"
+      ValidationMethod: DNS
+
   Api:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -171,13 +180,14 @@ Resources:
                 - !Ref UserPoolClient
               issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
         DefaultAuthorizer: ManagerAuthorizer
-      #### TODO: enable and edit to diamory domain when registered in aws
-      #Domain:
-        #DomainName: "diamory.de"
-        #CertificateArn: "arn:aws:acm:eu-central-1:828803652383:certificate/4b5d3c42-6d59-4056-9a08-710db8ee023c"
-        #EndpointConfiguration: REGIONAL
-        #Route53:
-          #HostedZoneId: "Z078443521KM7OIOUJEME"
+      Domain:
+        DomainName: "api.diamory.de"
+        CertificateArn: !Ref ApiDomainCertificate
+        EndpointConfiguration: REGIONAL
+        Route53:
+          HostedZoneId: "Z02112923J7IQK3X4KU7D"
+
+
   
 
   #    ██████   █████  ████████  █████  
