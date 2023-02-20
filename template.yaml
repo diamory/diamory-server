@@ -341,3 +341,31 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+
+  GetPayloadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/functions/get-payload
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /payload/{checksum}
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-s3"

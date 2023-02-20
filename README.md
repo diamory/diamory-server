@@ -19,7 +19,7 @@ You will a aws profile named `diamory`, with credentials specified (`~/.aws/conf
 To build and deploy your application for the first time, run the following in your shell:
 
 ```bash
-npm run deploy:guided
+npm run deploy:first
 ```
 
 The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:

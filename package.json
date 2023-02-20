@@ -15,7 +15,7 @@
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "./scripts/tests.sh",
     "deploy": "sam build && sam deploy --profile diamory",
-    "deploy:guided": "sam build && sam deploy --guided --profile diamory",
+    "deploy:first": "sam build && sam deploy --guided --profile diamory",
     "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },
   "devDependencies": {
