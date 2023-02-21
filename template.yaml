@@ -365,7 +365,7 @@ Resources:
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
-      MemorySize: 256
+      MemorySize: 128
       Architectures:
         - x86_64
       Environment:
