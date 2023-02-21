@@ -5,10 +5,6 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 const payloadDoesNotExistError = 'payload does not exist';
 const invalidChecksumError = 'invalid checksum';
 
-const headers = {
-  'Content-Type': 'application/json'
-};
-
 const checkChecksum = (checksum: string): void => {
   const checksumPattern = /^[a-f0-9]{64}$/u;
   if (!checksumPattern.test(checksum)) {
