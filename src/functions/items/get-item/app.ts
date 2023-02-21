@@ -4,6 +4,10 @@ import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist';
 
+const headers = {
+  'Content-Type': 'application/json'
+};
+
 interface AnyItem {
   [key: string]: unknown;
 }
@@ -34,6 +38,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const { accountId: unused, ...itemProperties } = item;
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({
         message: 'ok',
         item: { ...itemProperties }
@@ -44,6 +49,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const errMsg = err ? (err as Error).message : '';
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`,
         item: null

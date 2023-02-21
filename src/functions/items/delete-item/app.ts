@@ -5,6 +5,10 @@ import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
 const missingItemError = 'this item does not exist. do add request instead';
 const notAllowedError = 'you are not allowed to do so';
 
+const headers = {
+  'Content-Type': 'application/json'
+};
+
 const checkAccountStatus = (status: string, requiredStatus: string): void => {
   if (status !== requiredStatus) {
     throw new Error(notAllowedError);
@@ -38,6 +42,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     await deleteItem(id, accountId);
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({
         message: 'ok'
       })
@@ -47,6 +52,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const errMsg = err ? (err as Error).message : '';
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`
       })

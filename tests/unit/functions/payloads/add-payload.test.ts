@@ -57,12 +57,13 @@ describe('Add Payload', (): void => {
       'active'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(201);
     assert.that(message).is.equalTo('ok');
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.equalTo(testBody);
   });
 
@@ -76,12 +77,13 @@ describe('Add Payload', (): void => {
       'active'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${invalidChecksumError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();
   });
 
@@ -95,12 +97,13 @@ describe('Add Payload', (): void => {
       'suspended'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();
   });
 });

@@ -64,36 +64,39 @@ describe('Delete Payload', (): void => {
   test('returns with success on active account.', async (): Promise<void> => {
     const event = buildTestEvent('delete', 'payload/{checksum}', [testChecksum], {}, false, 'active');
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(200);
     assert.that(message).is.equalTo('ok');
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();
   });
 
   test('returns with error on invalid checksum.', async (): Promise<void> => {
     const event = buildTestEvent('delete', 'payload/{checksum}', ['invalid'], {}, false, 'active');
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${invalidChecksumError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.equalTo(testBody);
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
     const event = buildTestEvent('delete', 'payload/{checksum}', [testChecksum], {}, false, 'suspended');
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.equalTo(testBody);
   });
 });

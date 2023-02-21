@@ -64,10 +64,11 @@ describe('Delete Item', (): void => {
     const { id } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', [id], {}, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(statusCode).is.equalTo(200);
     assert.that(message).is.equalTo('ok');
     assert.that(Item).is.undefined();
@@ -78,12 +79,13 @@ describe('Delete Item', (): void => {
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item?.id).is.equalTo(id);
@@ -97,12 +99,13 @@ describe('Delete Item', (): void => {
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'suspended');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item?.id).is.equalTo(id);

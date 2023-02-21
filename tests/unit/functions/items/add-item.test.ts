@@ -56,12 +56,13 @@ describe('Add Item', (): void => {
     const event = buildTestEvent('post', '/item', [], testItem, false, 'active');
     const { id, checksum, payloadTimestamp } = testItem;
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = (await getItem()) as unknown as DiamoryItemWithAccountId;
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(201);
     assert.that(message).is.equalTo('ok');
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();
     assert.that(Item.id).is.equalTo(id);
@@ -76,36 +77,39 @@ describe('Add Item', (): void => {
     const modifiedItem = { ...testItem, payloadTimestamp: 96 };
     const updateEvent = buildTestEvent('post', '/add-item', [], modifiedItem, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(updateEvent);
+    const { statusCode, body, headers } = await lambdaHandler(updateEvent);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${itemAlreadyExistsError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item?.payloadTimestamp).is.equalTo(testItem.payloadTimestamp);
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
     const event = buildTestEvent('post', '/item', [], testItem, false, 'suspended');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.undefined();
   });
 
   test('returns with error on invalid item.', async (): Promise<void> => {
     const event = buildTestEvent('post', '/item', [], {}, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${invalidItemError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.undefined();
   });
 });

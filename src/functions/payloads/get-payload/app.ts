@@ -5,6 +5,10 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 const payloadDoesNotExistError = 'payload does not exist';
 const invalidChecksumError = 'invalid checksum';
 
+const headers = {
+  'Content-Type': 'application/json'
+};
+
 const checkChecksum = (checksum: string): void => {
   const checksumPattern = /^[a-f0-9]{64}$/u;
   if (!checksumPattern.test(checksum)) {
@@ -37,6 +41,9 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const Body = await getPayload(accountId, checksum);
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/octet-stream'
+      },
       body: Buffer.from(Body).toString('base64'),
       isBase64Encoded: true
     };
@@ -45,6 +52,9 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const errMsg = err ? (err as Error).message : '';
     return {
       statusCode: errMsg == invalidChecksumError ? 500 : 404,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`
       }),

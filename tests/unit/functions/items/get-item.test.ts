@@ -52,11 +52,12 @@ describe('Get Item', (): void => {
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('get', '/item/{id}', [id], {}, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const { message, item } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(200);
     assert.that(message).is.equalTo('ok');
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(item).is.not.undefined();
     assert.that(item).is.not.null();
     assert.that(item.id).is.equalTo(id);
@@ -69,11 +70,12 @@ describe('Get Item', (): void => {
     await putItem();
     const event = buildTestEvent('get', '/item/{id}', ['missing'], {}, false, 'active');
 
-    const { statusCode, body } = await lambdaHandler(event);
+    const { statusCode, body, headers } = await lambdaHandler(event);
 
     const { message, item } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(item).is.null();
   });
 });

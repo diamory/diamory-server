@@ -50,32 +50,35 @@ describe('Get Payload', (): void => {
   test('returns with success and correct item.', async (): Promise<void> => {
     const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false, 'active');
 
-    const { body, isBase64Encoded, statusCode } = await lambdaHandler(event);
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
     assert.that(statusCode).is.equalTo(200);
     assert.that(body).is.equalTo(Buffer.from(testBody).toString('base64'));
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/octet-stream');
     assert.that(isBase64Encoded).is.true();
   });
 
   test('returns with error on invalid checksum.', async (): Promise<void> => {
     const event = buildTestEvent('get', 'payload/{checksum}', ['invalid'], {}, false, 'active');
 
-    const { body, isBase64Encoded, statusCode } = await lambdaHandler(event);
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(isBase64Encoded).is.false();
     assert.that(message).is.equalTo(`some error happened: ${invalidChecksumError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
   });
 
   test('returns empty buffer if object does not exist.', async (): Promise<void> => {
     const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum.replace('d', 'e')], {}, false, 'active');
 
-    const { body, isBase64Encoded, statusCode } = await lambdaHandler(event);
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(404);
     assert.that(isBase64Encoded).is.false();
     assert.that(message).is.equalTo(`some error happened: ${payloadDoesNotExistError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
   });
 });

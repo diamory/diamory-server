@@ -80,13 +80,14 @@ describe('Replace Payload', (): void => {
       'active'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(200);
     assert.that(message).is.equalTo('ok');
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.null();
     assert.that(newPayloadBody).is.equalTo(newTestBody);
   });
@@ -101,13 +102,14 @@ describe('Replace Payload', (): void => {
       'active'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${invalidOldChecksumError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);
     assert.that(newPayloadBody).is.null();
   });
@@ -122,13 +124,14 @@ describe('Replace Payload', (): void => {
       'active'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${invalidNewChecksumError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);
     assert.that(newPayloadBody).is.null();
   });
@@ -143,13 +146,14 @@ describe('Replace Payload', (): void => {
       'suspended'
     );
 
-    const { body, statusCode } = await lambdaHandler(event);
+    const { body, statusCode, headers } = await lambdaHandler(event);
 
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(500);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);
     assert.that(newPayloadBody).is.null();
   });

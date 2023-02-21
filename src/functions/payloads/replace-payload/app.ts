@@ -6,6 +6,10 @@ const notAllowedError = 'you are not allowed to do so';
 const invalidOldChecksumError = 'invalid old checksum';
 const invalidNewChecksumError = 'invalid new checksum';
 
+const headers = {
+  'Content-Type': 'application/json'
+};
+
 const checkAccountStatus = (status: string, requiredStatus: string): void => {
   if (status !== requiredStatus) {
     throw new Error(notAllowedError);
@@ -52,6 +56,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     await addPayload(accountId, newChecksum, body);
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({
         message: 'ok'
       })
@@ -61,6 +66,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const errMsg = err ? (err as Error).message : '';
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`
       })

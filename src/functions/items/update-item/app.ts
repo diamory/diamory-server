@@ -9,6 +9,10 @@ const notAllowedError = 'you are not allowed to do so';
 
 const itemTableName = 'diamory-item';
 
+const headers = {
+  'Content-Type': 'application/json'
+};
+
 interface AnyItem {
   [key: string]: unknown;
 }
@@ -74,6 +78,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     await updateItem(item, accountId);
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({
         message: 'ok'
       })
@@ -83,6 +88,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const errMsg = err ? (err as Error).message : '';
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`
       })
