@@ -7,8 +7,6 @@ const missingItemError = 'this item does not exist. do add request instead';
 const invalidItemError = 'invalid item';
 const notAllowedError = 'you are not allowed to do so';
 
-const itemTableName = 'diamory-item';
-
 const headers = {
   'Content-Type': 'application/json'
 };
@@ -45,7 +43,7 @@ const checkItem = (item: AnyItem): void => {
 const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Promise<void> => {
   const { id, checksum, payloadTimestamp } = Item;
   const params = {
-    TableName: itemTableName,
+    TableName: process.env.ItemTableName,
     Key: { id, accountId },
     ExpressionAttributeValues: {
       ':checksum': checksum,

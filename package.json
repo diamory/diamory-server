@@ -14,9 +14,10 @@
     "unit_": "jest --runInBand",
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "./scripts/tests.sh",
-    "deploy": "sam build && sam deploy --profile diamory",
-    "deploy:first": "sam build && sam deploy --guided --profile diamory",
-    "drop-stack-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
+    "deploy:dev": "sam build && sam deploy --config-env staging --profile diamory",
+    "deploy:prod": "sam build && sam deploy --config-env prod --profile diamory",
+    "drop-dev-yes": "aws cloudformation delete-stack --stack-name diamory-server--dev --profile diamory",
+    "drop-prod-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.271.0",

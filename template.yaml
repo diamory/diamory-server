@@ -1,13 +1,56 @@
+#     ██████  ███████ ███    ██ ███████ ██████   █████  ██      
+#    ██       ██      ████   ██ ██      ██   ██ ██   ██ ██      
+#    ██   ███ █████   ██ ██  ██ █████   ██████  ███████ ██      
+#    ██    ██ ██      ██  ██ ██ ██      ██   ██ ██   ██ ██      
+#     ██████  ███████ ██   ████ ███████ ██   ██ ██   ██ ███████
+
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   diamory-server
 
   Sample SAM Template for diamory-server
-  
+
 Globals:
   Function:
     Timeout: 3
+
+
+
+#    ███████ ████████  █████   ██████  ███████ ███████ 
+#    ██         ██    ██   ██ ██       ██      ██      
+#    ███████    ██    ███████ ██   ███ █████   ███████ 
+#         ██    ██    ██   ██ ██    ██ ██           ██ 
+#    ███████    ██    ██   ██  ██████  ███████ ███████
+
+Parameters:
+  StagesEnvironment:
+    Type: String
+    Default: "staging"
+    AllowedValues:
+      - "staging"
+      - "prod"
+    Description: "Environment for stages staging and prod."
+
+Mappings:
+  StagesMapping:
+    staging:
+      Domain: "dev.api.diamory.de"
+      CallbackUrl: "https://dev.api.diamory.de?callback"
+      LogoutUrl: "https://dev.api.diamory.de?logout"
+      ItemTableName: "diamory-item--dev"
+      PayloadsBucketName: "diamory-payloads--dev"
+      ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb--dev"
+      ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3--dev"
+    prod:
+      Domain: "api.diamory.de"
+      CallbackUrl: "https://api.diamory.de?callback"
+      LogoutUrl: "https://api.diamory.de?logout"
+      ItemTableName: "diamory-item"
+      PayloadsBucketName: "diamory-payloads"
+      ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb"
+      ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3"
+
 
 Resources:
 
@@ -24,7 +67,6 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: "diamory-user-pool"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
       UsernameAttributes:
@@ -59,7 +101,6 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: "diamory-user-pool-client"
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - "code"
@@ -67,10 +108,10 @@ Resources:
       AllowedOAuthScopes:
         - "profile"
         - "openid"
-      CallbackURLs:
-        - "https://api.diamory.de?callback"
+      CallbackURLs: 
+        - !FindInMap [StagesMapping, !Ref StagesEnvironment, CallbackUrl]
       LogoutURLs:
-        - "https://api.diamory.de?logout"
+        - !FindInMap [StagesMapping, !Ref StagesEnvironment, LogoutUrl]
       SupportedIdentityProviders:
         - "COGNITO"
       
@@ -78,7 +119,9 @@ Resources:
     Type: AWS::Cognito::UserPoolDomain 
     Properties:
       UserPoolId: !Ref UserPool
-      Domain: "diamory-user"
+      Domain: !Sub
+        - "diamory-user-${environment}"
+        - environment: !Ref StagesEnvironment
 
 
 
@@ -91,7 +134,6 @@ Resources:
   ExecutionRoleWithDynamoDBAccess:
     Type: AWS::IAM::Role
     Properties: 
-      RoleName: "diamory-user-execution-role-with-dynamodb-access"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -102,13 +144,13 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: "diamory-user-execution-role-policy-with-dynamodb-access"
+        - PolicyName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ExecutionRoleWithDynamoDBAccessPolicyName]
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: "dynamodb:*"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -121,7 +163,6 @@ Resources:
   ExecutionRoleWithS3Access:
     Type: AWS::IAM::Role
     Properties: 
-      RoleName: "diamory-user-execution-role-with-s3-access"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -132,7 +173,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: "diamory-user-execution-role-policy-with-s3-access"
+        - PolicyName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ExecutionRoleWithS3AccessPolicyName]
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -141,7 +182,7 @@ Resources:
                   - "s3:PutObject"
                   - "s3:GetObject"
                   - "s3:DeleteObject"
-                Resource: "arn:aws:s3:::diamory-s3-bucket/*"
+                Resource: "arn:aws:s3:::diamory-payloads*/*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -162,9 +203,9 @@ Resources:
   ApiDomainCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: "api.diamory.de"
+      DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
       DomainValidationOptions:
-        - DomainName: "api.diamory.de"
+        - DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
           HostedZoneId: "Z02112923J7IQK3X4KU7D"
       ValidationMethod: DNS
 
@@ -181,7 +222,7 @@ Resources:
               issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
         DefaultAuthorizer: ManagerAuthorizer
       Domain:
-        DomainName: "api.diamory.de"
+        DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
         CertificateArn: !Ref ApiDomainCertificate
         EndpointConfiguration: REGIONAL
         Route53:
@@ -196,12 +237,12 @@ Resources:
   #    ██   ██ ██   ██    ██    ██   ██ 
   #    ██████  ██   ██    ██    ██   ██
 
-  S3Bucket:
+  PayloadsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: diamory-s3-bucket
+      BucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
       VersioningConfiguration: 
-        Status: Enabled
+        Status: Suspended
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -211,7 +252,7 @@ Resources:
   ItemTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: "diamory-item"
+      TableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -263,6 +304,9 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -292,6 +336,9 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -321,6 +368,9 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -350,6 +400,9 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -387,6 +440,9 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -415,6 +471,9 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -443,6 +502,9 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -471,6 +533,9 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
       Events:
         HttpApiGetEvent:
           Type: HttpApi

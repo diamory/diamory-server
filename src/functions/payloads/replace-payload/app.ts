@@ -6,6 +6,8 @@ const notAllowedError = 'you are not allowed to do so';
 const invalidOldChecksumError = 'invalid old checksum';
 const invalidNewChecksumError = 'invalid new checksum';
 
+const bucketName = process.env.PayloadsBucketName;
+
 const headers = {
   'Content-Type': 'application/json'
 };
@@ -25,7 +27,7 @@ const checkChecksum = (checksum: string, errMsg: string): void => {
 
 const deletePayload = async (accountId: string, checksum: string): Promise<void> => {
   const params = {
-    Bucket: 'diamory-s3-bucket',
+    Bucket: bucketName,
     Key: `${accountId}/${checksum}`
   };
   const command = new DeleteObjectCommand(params);
@@ -34,7 +36,7 @@ const deletePayload = async (accountId: string, checksum: string): Promise<void>
 
 const addPayload = async (accountId: string, checksum: string, Body: Buffer): Promise<void> => {
   const params = {
-    Bucket: 'diamory-s3-bucket',
+    Bucket: bucketName,
     Key: `${accountId}/${checksum}`,
     Body
   };

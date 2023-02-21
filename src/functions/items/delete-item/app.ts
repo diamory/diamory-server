@@ -17,7 +17,7 @@ const checkAccountStatus = (status: string, requiredStatus: string): void => {
 
 const deleteItem = async (id: string, accountId: string): Promise<void> => {
   const params = {
-    TableName: 'diamory-item',
+    TableName: process.env.ItemTableName,
     Key: { id, accountId },
     ExpressionAttributeValues: {
       ':id': id,

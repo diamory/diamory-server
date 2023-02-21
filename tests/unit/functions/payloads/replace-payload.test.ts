@@ -16,7 +16,7 @@ jest.mock('../../../../src/functions/payloads/replace-payload/s3Client', () => {
   };
 });
 
-const bucketName = 'diamory-s3-bucket';
+const bucketName = process.env.PayloadsBucketName;
 const testChecksum = 'd1d733a8041744d6e4b7b991b5f38df48a3767acd674c9df231c92068801a460';
 const testBody = Buffer.from('testContent', 'utf8');
 const newTestChecksum = '2c6c86190554227524a49df554d8a1ad1a87200d277445b0b4d68455ac629a6b';

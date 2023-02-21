@@ -14,7 +14,7 @@ interface AnyItem {
 
 const getItem = async (id: string, accountId: string): Promise<AnyItem | undefined> => {
   const params = {
-    TableName: 'diamory-item',
+    TableName: process.env.ItemTableName,
     Key: { id, accountId }
   };
   const command = new GetCommand(params);

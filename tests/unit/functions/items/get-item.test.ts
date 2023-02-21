@@ -12,7 +12,7 @@ jest.mock('../../../../src/functions/items/get-item/dynamoDBClient', () => {
   };
 });
 
-const itemTableName = 'diamory-item';
+const itemTableName = process.env.ItemTableName;
 
 const testItem: DiamoryItem = {
   id: 'id',

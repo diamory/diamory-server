@@ -42,7 +42,7 @@ const checkItem = (item: AnyItem): void => {
 
 const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
   const params = {
-    TableName: 'diamory-item',
+    TableName: process.env.ItemTableName,
     Item,
     ConditionExpression: 'attribute_not_exists(id)'
   };

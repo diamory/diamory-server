@@ -7,6 +7,7 @@ export default {
   transform: {
     '^.+\\.ts?$': 'ts-jest'
   },
+  setupFiles: ['<rootDir>/jest.setEnvVars.js'],
   clearMocks: true,
   testMatch: ['**/tests/unit/functions/*/*.test.ts']
 };

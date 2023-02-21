@@ -14,7 +14,7 @@ const checkChecksum = (checksum: string): void => {
 
 const getPayload = async (accountId: string, checksum: string): Promise<Uint8Array> => {
   const params = {
-    Bucket: 'diamory-s3-bucket',
+    Bucket: process.env.PayloadsBucketName,
     Key: `${accountId}/${checksum}`
   };
   const command = new GetObjectCommand(params);

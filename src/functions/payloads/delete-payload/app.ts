@@ -24,7 +24,7 @@ const checkChecksum = (checksum: string): void => {
 
 const deletePayload = async (accountId: string, checksum: string): Promise<void> => {
   const params = {
-    Bucket: 'diamory-s3-bucket',
+    Bucket: process.env.PayloadsBucketName,
     Key: `${accountId}/${checksum}`
   };
   const command = new DeleteObjectCommand(params);
