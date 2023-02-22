@@ -50,7 +50,7 @@ describe('Get Item', (): void => {
   test('returns item.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('get', '/item/{id}', [id], {}, false, 'active');
+    const event = buildTestEvent('get', '/item/{id}', [id], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -68,7 +68,7 @@ describe('Get Item', (): void => {
 
   test('returns with error due to missing item.', async (): Promise<void> => {
     await putItem();
-    const event = buildTestEvent('get', '/item/{id}', ['missing'], {}, false, 'active');
+    const event = buildTestEvent('get', '/item/{id}', ['missing'], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 

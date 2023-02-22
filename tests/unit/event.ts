@@ -29,8 +29,7 @@ const buildTestEvent = (
   pathWithPlaceholders: string,
   parameters: string[],
   body: object | string,
-  isBase64Encoded: boolean,
-  status: string
+  isBase64Encoded: boolean
 ): APIGatewayProxyEventV2WithJWTAuthorizer => {
   const { path, pathParameters } = applicateParameters(pathWithPlaceholders, parameters);
   return {
@@ -48,8 +47,7 @@ const buildTestEvent = (
         jwt: {
           claims: {
             username: 'testuser',
-            sub: accountId,
-            status
+            sub: accountId
           },
           scopes: ['']
         }

@@ -48,7 +48,7 @@ describe('Get Payload', (): void => {
   });
 
   test('returns with success and correct item.', async (): Promise<void> => {
-    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false, 'active');
+    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
@@ -59,7 +59,7 @@ describe('Get Payload', (): void => {
   });
 
   test('returns with error on invalid checksum.', async (): Promise<void> => {
-    const event = buildTestEvent('get', 'payload/{checksum}', ['invalid'], {}, false, 'active');
+    const event = buildTestEvent('get', 'payload/{checksum}', ['invalid'], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
@@ -71,7 +71,7 @@ describe('Get Payload', (): void => {
   });
 
   test('returns empty buffer if object does not exist.', async (): Promise<void> => {
-    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum.replace('d', 'e')], {}, false, 'active');
+    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum.replace('d', 'e')], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 

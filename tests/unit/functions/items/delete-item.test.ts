@@ -14,6 +14,7 @@ jest.mock('../../../../src/functions/items/delete-item/dynamoDBClient', () => {
 });
 
 const itemTableName = process.env.ItemTableName;
+const accountTableName = process.env.AccountTableName;
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -54,15 +55,35 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
+const putAccount = async (status: string): Promise<void> => {
+  const params = {
+    TableName: accountTableName,
+    Item: { accountId, status }
+  };
+  const command = new PutCommand(params);
+  await dynamoDBClient.send(command);
+};
+
+const deleteAccount = async (): Promise<void> => {
+  const params = {
+    TableName: accountTableName,
+    Key: { accountId }
+  };
+  const command = new DeleteCommand(params);
+  await dynamoDBClient.send(command);
+};
+
 describe('Delete Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
+    await deleteAccount();
   });
 
   test('returns with success when existent item is deleted.', async (): Promise<void> => {
+    await putAccount('active');
     await putItem();
     const { id } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', [id], {}, false, 'active');
+    const event = buildTestEvent('delete', '/item/{id}', [id], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -75,9 +96,10 @@ describe('Delete Item', (): void => {
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
+    await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'active');
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -95,9 +117,30 @@ describe('Delete Item', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
+    await putAccount('suspended');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false, 'suspended');
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false);
+
+    const { statusCode, body, headers } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(500);
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(Item).is.not.undefined();
+    assert.that(Item).is.not.null();
+    assert.that(Item?.id).is.equalTo(id);
+    assert.that(Item?.checksum).is.equalTo(checksum);
+    assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
+    assert.that(Item?.accountId).is.equalTo(accountId);
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    await putItem();
+    const { id, checksum, payloadTimestamp } = testItem;
+    const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 

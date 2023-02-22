@@ -7,7 +7,7 @@ import {
 import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
-import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from '../../../../src/functions/items/add-item/item';
 import { AnyItem } from '../../types/generics';
 
@@ -19,6 +19,7 @@ jest.mock('../../../../src/functions/items/add-item/dynamoDBClient', () => {
 });
 
 const itemTableName = process.env.ItemTableName;
+const accountTableName = process.env.AccountTableName;
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -47,13 +48,33 @@ const deleteItem = async (): Promise<void> => {
   await dynamoDBClient.send(command);
 };
 
+const putAccount = async (status: string): Promise<void> => {
+  const params = {
+    TableName: accountTableName,
+    Item: { accountId, status }
+  };
+  const command = new PutCommand(params);
+  await dynamoDBClient.send(command);
+};
+
+const deleteAccount = async (): Promise<void> => {
+  const params = {
+    TableName: accountTableName,
+    Key: { accountId }
+  };
+  const command = new DeleteCommand(params);
+  await dynamoDBClient.send(command);
+};
+
 describe('Add Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
+    await deleteAccount();
   });
 
   test('returns with success on active account when item is new.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/item', [], testItem, false, 'active');
+    await putAccount('active');
+    const event = buildTestEvent('post', '/item', [], testItem, false);
     const { id, checksum, payloadTimestamp } = testItem;
 
     const { statusCode, body, headers } = await lambdaHandler(event);
@@ -72,10 +93,11 @@ describe('Add Item', (): void => {
   });
 
   test('returns with error when item already exists.', async (): Promise<void> => {
-    const addEvent = buildTestEvent('post', '/item', [], testItem, false, 'active');
+    await putAccount('active');
+    const addEvent = buildTestEvent('post', '/item', [], testItem, false);
     await lambdaHandler(addEvent);
     const modifiedItem = { ...testItem, payloadTimestamp: 96 };
-    const updateEvent = buildTestEvent('post', '/add-item', [], modifiedItem, false, 'active');
+    const updateEvent = buildTestEvent('post', '/add-item', [], modifiedItem, false);
 
     const { statusCode, body, headers } = await lambdaHandler(updateEvent);
 
@@ -88,7 +110,21 @@ describe('Add Item', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/item', [], testItem, false, 'suspended');
+    await putAccount('suspended');
+    const event = buildTestEvent('post', '/item', [], testItem, false);
+
+    const { statusCode, body, headers } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(500);
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(Item).is.undefined();
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    const event = buildTestEvent('post', '/item', [], testItem, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -101,7 +137,8 @@ describe('Add Item', (): void => {
   });
 
   test('returns with error on invalid item.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/item', [], {}, false, 'active');
+    await putAccount('active');
+    const event = buildTestEvent('post', '/item', [], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 

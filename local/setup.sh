@@ -20,7 +20,7 @@ then
   } >>$CONFIG_FILE
 fi
 
-# create dynamo db table(s)
+# create item table
 aws dynamodb create-table \
   --endpoint-url http://localhost:8000 \
   --table-name diamory-item--test \
@@ -28,6 +28,15 @@ aws dynamodb create-table \
   --key-schema '[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"id","KeyType":"RANGE"}]' \
   --billing-mode PAY_PER_REQUEST \
   --local-secondary-indexes '[{"IndexName":"timestamp-index","KeySchema":[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"payloadTimestamp","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["checksum"],"ProjectionType":"INCLUDE"}}]' \
+  > /dev/null
+
+# create account table
+aws dynamodb create-table \
+  --endpoint-url http://localhost:8000 \
+  --table-name diamory-account--test \
+  --attribute-definitions '[{"AttributeName":"accountId","AttributeType":"S"}]' \
+  --key-schema '[{"AttributeName":"accountId","KeyType":"HASH"}]' \
+  --billing-mode PAY_PER_REQUEST \
   > /dev/null
 
 # create s3 bucket(s)

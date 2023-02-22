@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
@@ -15,8 +15,18 @@ interface AnyItem {
   [key: string]: unknown;
 }
 
-const checkAccountStatus = (status: string, requiredStatus: string): void => {
-  if (status !== requiredStatus) {
+const checkAccountStatus = async (accountId: string): Promise<void> => {
+  const params = {
+    Key: { accountId },
+    TableName: process.env.AccountTableName
+  };
+  const command = new GetCommand(params);
+  const { Item } = await dynamoDBClient.send(command);
+
+  if (!Item) {
+    throw new Error(notAllowedError);
+  }
+  if (Item.status !== 'active') {
     throw new Error(notAllowedError);
   }
 };
@@ -65,8 +75,7 @@ const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Pr
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const status: string = event.requestContext.authorizer.jwt.claims.status as string;
-    checkAccountStatus(status, 'active');
+    await checkAccountStatus(accountId);
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     const item = {
       ...itemWithoutAccountId,

@@ -96,10 +96,10 @@ Resources:
   #    ██   ██ ██           ██       ██   ██ ██      ██      ██           ██      ██ 
   #    ██   ██ ███████ ███████       ██   ██  ██████  ██████ ███████ ███████ ███████
 
-  ExecutionRoleWithDynamoDBAccess:
+  ExecutionRoleForItems:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "diamory-role-with-dynamodb-access-${Stage}"
+      RoleName: !Sub "diamory-role-for-items-${Stage}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -110,13 +110,20 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: !Sub "diamory-role-with-dynamodb-access-${Stage}-policy"
+        - PolicyName: !Sub "diamory-role-for-items-${Stage}-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
-                Action: "dynamodb:*"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item*"
+                Action:
+                  - "dynamodb:PutItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:UpdateItem"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item-*"
+              - Effect: Allow
+                Action: "dynamodb:GetItem"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -126,10 +133,10 @@ Resources:
                 Action: "logs:CreateLogGroup"
                 Resource: "*"
 
-  ExecutionRoleWithS3Access:
+  ExecutionRoleForPayloads:
     Type: AWS::IAM::Role
     Properties: 
-      RoleName: !Sub "diamory-role-with-s3-access-${Stage}"
+      RoleName: !Sub "diamory-role-for-payloads-${Stage}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -140,7 +147,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: !Sub "diamory-role-with-s3-access-${Stage}-policy"
+        - PolicyName: !Sub "diamory-role-for-payloads-${Stage}-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -149,7 +156,10 @@ Resources:
                   - "s3:PutObject"
                   - "s3:GetObject"
                   - "s3:DeleteObject"
-                Resource: "arn:aws:s3:::diamory-payloads*/*"
+                Resource: "arn:aws:s3:::diamory-payloads-*/*"
+              - Effect: Allow
+                Action: "dynamodb:GetItem"
+                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -247,6 +257,19 @@ Resources:
               - "checksum"
             ProjectionType: "INCLUDE"
 
+  AccountTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "diamory-account-${Stage}"
+      TableClass: "STANDARD"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "accountId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "accountId"
+          KeyType: "HASH"
+
 
 
   #    ███████ ██    ██ ███    ██  ██████ ████████ ██  ██████  ███    ██ ███████ 
@@ -269,13 +292,14 @@ Resources:
       CodeUri: src/functions/items/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
+      Role: !GetAtt ExecutionRoleForItems.Arn
       MemorySize: 256
       Architectures:
         - x86_64
       Environment:
         Variables:
           ItemTableName: !Sub "diamory-item-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -302,7 +326,7 @@ Resources:
       CodeUri: src/functions/items/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
+      Role: !GetAtt ExecutionRoleForItems.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -335,13 +359,14 @@ Resources:
       CodeUri: src/functions/items/update-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
+      Role: !GetAtt ExecutionRoleForItems.Arn
       MemorySize: 128
       Architectures:
         - x86_64
       Environment:
         Variables:
           ItemTableName: !Sub "diamory-item-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -368,13 +393,14 @@ Resources:
       CodeUri: src/functions/items/delete-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithDynamoDBAccess.Arn
+      Role: !GetAtt ExecutionRoleForItems.Arn
       MemorySize: 256
       Architectures:
         - x86_64
       Environment:
         Variables:
           ItemTableName: !Sub "diamory-item-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -409,13 +435,14 @@ Resources:
       CodeUri: src/functions/payloads/add-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithS3Access.Arn
+      Role: !GetAtt ExecutionRoleForPayloads.Arn
       MemorySize: 128
       Architectures:
         - x86_64
       Environment:
         Variables:
           PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -433,6 +460,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   GetPayloadFunction:
     Type: AWS::Serverless::Function
@@ -441,7 +470,7 @@ Resources:
       CodeUri: src/functions/payloads/get-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithS3Access.Arn
+      Role: !GetAtt ExecutionRoleForPayloads.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -473,13 +502,14 @@ Resources:
       CodeUri: src/functions/payloads/replace-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithS3Access.Arn
+      Role: !GetAtt ExecutionRoleForPayloads.Arn
       MemorySize: 128
       Architectures:
         - x86_64
       Environment:
         Variables:
           PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -497,6 +527,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   DeletePayloadFunction:
     Type: AWS::Serverless::Function
@@ -505,13 +537,14 @@ Resources:
       CodeUri: src/functions/payloads/delete-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleWithS3Access.Arn
+      Role: !GetAtt ExecutionRoleForPayloads.Arn
       MemorySize: 128
       Architectures:
         - x86_64
       Environment:
         Variables:
           PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -529,3 +562,5 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
