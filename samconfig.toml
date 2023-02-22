@@ -1,21 +1,23 @@
 version = 0.1
 
 [staging.deploy.parameters]
-stack_name = "diamory-server--dev"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1e8l7nacbvxxq"
-s3_prefix = "diamory-server--dev"
+stack_name = "diamory-server-staging"
+resolve_s3 = true
+s3_prefix = "diamory-server-staging"
 region = "eu-central-1"
 profile = "diamory"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_NAMED_IAM"
 image_repositories = []
-parameter_overrides = "StagesEnvironment=\"staging\""
+parameter_overrides = "Stage=\"staging\""
+confirm_changeset = true
 
 [prod.deploy.parameters]
-stack_name = "diamory-server"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1e8l7nacbvxxq"
-s3_prefix = "diamory-server"
+stack_name = "diamory-server-prod"
+resolve_s3 = true
+s3_prefix = "diamory-server-prod"
 region = "eu-central-1"
 profile = "diamory"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_NAMED_IAM"
 image_repositories = []
-parameter_overrides = "StagesEnvironment=\"prod\""
+parameter_overrides = "Stage=\"prod\""
+confirm_changeset = true

@@ -14,41 +14,6 @@ To use the SAM CLI, you need the following tools.
 
 You will need an aws profile named `diamory`, with credentials specified (`~/.aws/config` and/or `~/.aws/credentials`), to run deploy command.
 
-### First Deploy
-
-To deploy a stack (dev or prod) that haven't already deployed into an AWS account, run:
-
-```bash
-sam build && sam deploy --guided --profile diamory
-```
-
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
-
-* **Stack Name**: The name of the stack to deploy to CloudFormation.
-  This should be unique to your account and region, and a good starting point would be something matching your project name. \
-  Recommendation: 
-  * `diamory-server` for production stage
-  * `diamory-server--dev` for development stage,
-* **AWS Region**: The AWS region you want to deploy your app to. \
-  Should be `eu-central-1` (default)
-* **Parameter StagesEnvironment**: The stage name.
-  * `staging` for development stage
-  * `prod` for production stage
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review.
-  If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example,
-   create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. \
-   Should be: `y`
-* **Disable rollback**: If you don't want AWS CloudFormation to rollback changes on errors (not recommended), you can type `y` as value,
-  to disable rollback
-* **Save arguments to configuration files**: If set to yes, your choices will be saved to a configuration file inside the project,
-  so that in the future you can just run `npm run deploy:dev` or `npm run deploy:prod`,
-  without the need to give any parameters.
-* **SAM configuration file**: The file name for the configuration file. Just take the default.
-* **SAM configuration environment**: The name of the environment.
-  * `staging` for development stage
-  * `prod` for production stage
-
 ### Deploy for dev (staging)
 To update or re-deploy the staging (development) stage, if it was deployed at least once, simply run:
 
@@ -62,9 +27,6 @@ To update or re-deploy the prod (production) stage, if it was deployed at least 
 ```bash
 npm run deploy:prod
 ```
-
-### Notice:
-If the stage never was deloyed on the AWS Account, or the the CloudFormation Source Bucket was deleted, see: [First Deploy](#first-deploy)
 
 ## Unit tests
 

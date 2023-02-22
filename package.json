@@ -15,7 +15,7 @@
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "./scripts/tests.sh",
     "deploy:dev": "sam build && sam deploy --config-env staging --profile diamory",
-    "deploy:prod": "sam build && sam deploy --config-env prod --profile diamory",
+    "deploy:production": "sam build && sam deploy --config-env prod --profile diamory",
     "drop-dev-yes": "aws cloudformation delete-stack --stack-name diamory-server--dev --profile diamory",
     "drop-prod-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },

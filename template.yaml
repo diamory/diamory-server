@@ -24,32 +24,32 @@ Globals:
 #    ███████    ██    ██   ██  ██████  ███████ ███████
 
 Parameters:
-  StagesEnvironment:
+  Stage:
     Type: String
     Default: "staging"
     AllowedValues:
       - "staging"
       - "prod"
-    Description: "Environment for stages staging and prod."
+    Description: "Stages (staging and prod)."
 
-Mappings:
-  StagesMapping:
-    staging:
-      Domain: "dev.api.diamory.de"
-      CallbackUrl: "https://dev.api.diamory.de?callback"
-      LogoutUrl: "https://dev.api.diamory.de?logout"
-      ItemTableName: "diamory-item--dev"
-      PayloadsBucketName: "diamory-payloads--dev"
-      ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb--dev"
-      ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3--dev"
-    prod:
-      Domain: "api.diamory.de"
-      CallbackUrl: "https://api.diamory.de?callback"
-      LogoutUrl: "https://api.diamory.de?logout"
-      ItemTableName: "diamory-item"
-      PayloadsBucketName: "diamory-payloads"
-      ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb"
-      ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3"
+# Mappings:
+#   StagesMapping:
+#     staging:
+#       Domain: "dev.api.diamory.de"
+#       CallbackUrl: "https://dev.api.diamory.de?callback"
+#       LogoutUrl: "https://dev.api.diamory.de?logout"
+#       ItemTableName: "diamory-item--dev"
+#       PayloadsBucketName: "diamory-payloads--dev"
+#       ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb--dev"
+#       ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3--dev"
+#     prod:
+#       Domain: "api.diamory.de"
+#       CallbackUrl: "https://api.diamory.de?callback"
+#       LogoutUrl: "https://api.diamory.de?logout"
+#       ItemTableName: "diamory-item"
+#       PayloadsBucketName: "diamory-payloads"
+#       ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb"
+#       ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3"
 
 
 Resources:
@@ -67,6 +67,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
+      UserPoolName: !Sub "diamory-user-pool-${Stage}"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
       AliasAttributes:
@@ -103,9 +104,9 @@ Resources:
         - "profile"
         - "openid"
       CallbackURLs: 
-        - !FindInMap [StagesMapping, !Ref StagesEnvironment, CallbackUrl]
+        - !Sub "https://${Stage}.api.diamory.de/?callback"
       LogoutURLs:
-        - !FindInMap [StagesMapping, !Ref StagesEnvironment, LogoutUrl]
+        - !Sub "https://${Stage}.api.diamory.de/?logout"
       SupportedIdentityProviders:
         - "COGNITO"
       
@@ -113,9 +114,7 @@ Resources:
     Type: AWS::Cognito::UserPoolDomain 
     Properties:
       UserPoolId: !Ref UserPool
-      Domain: !Sub
-        - "diamory-user-${environment}"
-        - environment: !Ref StagesEnvironment
+      Domain: !Sub "diamory-user-${Stage}"
 
 
 
@@ -127,7 +126,8 @@ Resources:
 
   ExecutionRoleWithDynamoDBAccess:
     Type: AWS::IAM::Role
-    Properties: 
+    Properties:
+      RoleName: !Sub "diamory-role-with-dynamodb-access-${Stage}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -138,7 +138,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ExecutionRoleWithDynamoDBAccessPolicyName]
+        - PolicyName: !Sub "diamory-role-with-dynamodb-access-${Stage}-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -157,6 +157,7 @@ Resources:
   ExecutionRoleWithS3Access:
     Type: AWS::IAM::Role
     Properties: 
+      RoleName: !Sub "diamory-role-with-s3-access-${Stage}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -167,7 +168,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ExecutionRoleWithS3AccessPolicyName]
+        - PolicyName: !Sub "diamory-role-with-s3-access-${Stage}-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -197,15 +198,16 @@ Resources:
   ApiDomainCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
+      DomainName: !Sub "${Stage}.api.diamory.de"
       DomainValidationOptions:
-        - DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
+        - DomainName: !Sub "${Stage}.api.diamory.de"
           HostedZoneId: "Z02112923J7IQK3X4KU7D"
       ValidationMethod: DNS
 
   Api:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Name: !Sub "diamory-api-${Stage}"
       Auth:
         Authorizers:
           ManagerAuthorizer:
@@ -216,7 +218,7 @@ Resources:
               issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
         DefaultAuthorizer: ManagerAuthorizer
       Domain:
-        DomainName: !FindInMap [StagesMapping, !Ref StagesEnvironment, Domain]
+        DomainName: !Sub "${Stage}.api.diamory.de"
         CertificateArn: !Ref ApiDomainCertificate
         EndpointConfiguration: REGIONAL
         Route53:
@@ -234,7 +236,7 @@ Resources:
   PayloadsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
+      BucketName: !Sub "diamory-payloads-${Stage}"
       VersioningConfiguration: 
         Status: Suspended
       PublicAccessBlockConfiguration:
@@ -246,7 +248,7 @@ Resources:
   ItemTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
+      TableName: !Sub "diamory-item-${Stage}"
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -291,6 +293,7 @@ Resources:
   AddItemFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-add-item-${Stage}"
       CodeUri: src/functions/items/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -300,7 +303,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
+          ItemTableName: !Sub "diamory-item-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -323,6 +326,7 @@ Resources:
   GetItemFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-get-item-${Stage}"
       CodeUri: src/functions/items/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -332,7 +336,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
+          ItemTableName: !Sub "diamory-item-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -355,6 +359,7 @@ Resources:
   UpdateItemFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-update-item-${Stage}"
       CodeUri: src/functions/items/update-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -364,7 +369,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
+          ItemTableName: !Sub "diamory-item-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -387,6 +392,7 @@ Resources:
   DeleteItemFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-delete-item-${Stage}"
       CodeUri: src/functions/items/delete-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -396,7 +402,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          ItemTableName: !FindInMap [StagesMapping, !Ref StagesEnvironment, ItemTableName]
+          ItemTableName: !Sub "diamory-item-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -427,6 +433,7 @@ Resources:
   AddPayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-add-payload-${Stage}"
       CodeUri: src/functions/payloads/add-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -436,7 +443,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
+          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -458,6 +465,7 @@ Resources:
   GetPayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-get-payload-${Stage}"
       CodeUri: src/functions/payloads/get-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -467,7 +475,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
+          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -489,6 +497,7 @@ Resources:
   ReplacePayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-replace-payload-${Stage}"
       CodeUri: src/functions/payloads/replace-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -498,7 +507,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
+          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -520,6 +529,7 @@ Resources:
   DeletePayloadFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "diamory-delete-payload-${Stage}"
       CodeUri: src/functions/payloads/delete-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
@@ -529,7 +539,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          PayloadsBucketName: !FindInMap [StagesMapping, !Ref StagesEnvironment, PayloadsBucketName]
+          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
