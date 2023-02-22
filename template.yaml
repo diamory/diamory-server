@@ -360,7 +360,7 @@ Resources:
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRoleForItems.Arn
-      MemorySize: 128
+      MemorySize: 256
       Architectures:
         - x86_64
       Environment:
