@@ -75,12 +75,6 @@ Resources:
         CaseSensitive: true
       AutoVerifiedAttributes:
         - "email"
-      Schema: # TODO: define more later (credits, expires, etc.) (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-schemaattribute.html)
-        - AttributeDataType: String
-          DeveloperOnlyAttribute: true
-          Mutable: true
-          Required: false
-          Name: "status"
       Policies:
         PasswordPolicy:
           MinimumLength: 16
