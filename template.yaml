@@ -69,7 +69,7 @@ Resources:
     Properties:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-      UsernameAttributes:
+      AliasAttributes:
         - "email"
       UsernameConfiguration:
         CaseSensitive: true
