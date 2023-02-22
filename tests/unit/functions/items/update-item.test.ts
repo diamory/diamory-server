@@ -129,7 +129,7 @@ describe('Update Item', (): void => {
     await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('post', '/item', [], {}, false);
+    const event = buildTestEvent('put', '/item', [], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -150,7 +150,7 @@ describe('Update Item', (): void => {
     await putAccount('suspended');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('post', '/item', [], modifiedItem, false);
+    const event = buildTestEvent('put', '/item', [], modifiedItem, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -170,7 +170,7 @@ describe('Update Item', (): void => {
   test('returns with error on missing account.', async (): Promise<void> => {
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
-    const event = buildTestEvent('post', '/item', [], modifiedItem, false);
+    const event = buildTestEvent('put', '/item', [], modifiedItem, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
