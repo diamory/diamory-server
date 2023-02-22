@@ -15,14 +15,6 @@ Globals:
   Function:
     Timeout: 3
 
-
-
-#    ███████ ████████  █████   ██████  ███████ ███████ 
-#    ██         ██    ██   ██ ██       ██      ██      
-#    ███████    ██    ███████ ██   ███ █████   ███████ 
-#         ██    ██    ██   ██ ██    ██ ██           ██ 
-#    ███████    ██    ██   ██  ██████  ███████ ███████
-
 Parameters:
   Stage:
     Type: String
@@ -31,26 +23,6 @@ Parameters:
       - "staging"
       - "prod"
     Description: "Stages (staging and prod)."
-
-# Mappings:
-#   StagesMapping:
-#     staging:
-#       Domain: "dev.api.diamory.de"
-#       CallbackUrl: "https://dev.api.diamory.de?callback"
-#       LogoutUrl: "https://dev.api.diamory.de?logout"
-#       ItemTableName: "diamory-item--dev"
-#       PayloadsBucketName: "diamory-payloads--dev"
-#       ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb--dev"
-#       ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3--dev"
-#     prod:
-#       Domain: "api.diamory.de"
-#       CallbackUrl: "https://api.diamory.de?callback"
-#       LogoutUrl: "https://api.diamory.de?logout"
-#       ItemTableName: "diamory-item"
-#       PayloadsBucketName: "diamory-payloads"
-#       ExecutionRoleWithDynamoDBAccessPolicyName: "diamory-execution-role-policy-dynamodb"
-#       ExecutionRoleWithS3AccessPolicyName: "diamory-execution-role-policy-s3"
-
 
 Resources:
 
