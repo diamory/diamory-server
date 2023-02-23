@@ -128,10 +128,10 @@ Resources:
                   - "dynamodb:DeleteItem"
                   - "dynamodb:GetItem"
                   - "dynamodb:UpdateItem"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-item-*"
+                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-item-${Stage}"
               - Effect: Allow
                 Action: "dynamodb:GetItem"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-*"
+                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -164,10 +164,10 @@ Resources:
                   - "s3:PutObject"
                   - "s3:GetObject"
                   - "s3:DeleteObject"
-                Resource: "arn:aws:s3:::diamory-payloads-*/*"
+                Resource: !Sub "arn:aws:s3:::diamory-payloads-${Stage}/*"
               - Effect: Allow
                 Action: "dynamodb:GetItem"
-                Resource: "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-*"
+                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
