@@ -42,6 +42,12 @@ Resources:
       UserPoolName: !Sub "diamory-user-pool-${Stage}"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
+      Schema:
+        -  AttributeDataType: String
+           Name: email
+           DeveloperOnlyAttribute: false
+           Mutable: true
+           Required: true
       AliasAttributes:
         - "email"
       UsernameConfiguration:
@@ -70,7 +76,6 @@ Resources:
       UserPoolId: !Ref UserPool
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
-        - "code"
         - "implicit"
       AllowedOAuthScopes:
         - "profile"
@@ -81,7 +86,7 @@ Resources:
         - !Sub "https://${Stage}.api.diamory.de/?logout"
       SupportedIdentityProviders:
         - "COGNITO"
-      
+
   UserPoolDomain: 
     Type: AWS::Cognito::UserPoolDomain 
     Properties:
