@@ -23,10 +23,14 @@ Parameters:
       - "staging"
       - "prod"
     Description: "Stages (staging and prod)."
+  Account:
+    Type: String
+    Description: "ID of the AWS account."
+  HostedZone:
+    Type: String
+    Description: "ID of the hosted zone for diamory.de in Route 53"
 
 Resources:
-
-
 
   #     █████  ██    ██ ████████ ██   ██ 
   #    ██   ██ ██    ██    ██    ██   ██ 
@@ -34,14 +38,19 @@ Resources:
   #    ██   ██ ██    ██    ██    ██   ██ 
   #    ██   ██  ██████     ██    ██   ██
 
-  # TODO: define SES for mailing
-
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub "diamory-user-pool-${Stage}"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
       Schema:
         -  AttributeDataType: String
            Name: email
@@ -54,20 +63,14 @@ Resources:
         CaseSensitive: true
       AutoVerifiedAttributes:
         - "email"
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 16
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireSymbols: true
-          RequireUppercase: true
-      # TODO: finish following settings
-      # EmailConfiguration:
-        # EmailSendingAccount: DEVELOPER
-        # define later: ConfigurationSet, From, ReplyToEmailAddress, SourceArn)
-        ## (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-emailconfiguration.html)
-      # VerificationMessageTemplate: define this later
-      ## (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-verificationmessagetemplate.html)
+      EmailConfiguration:
+        EmailSendingAccount: DEVELOPER
+        SourceArn: !Sub "arn:aws:ses:eu-central-1:${Account}:identity/app.diamory.de"
+        From: "diamory app <account@app.diamory.de>"
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailSubject: "Bestätigungs-Code"
+        EmailMessage: "Hallo, hier ist dein Bestätigunscode, um deine Email-Adresse zu bestätigen und deinen Account zu aktivieren: {####}"
 
   
   UserPoolClient:
@@ -81,9 +84,9 @@ Resources:
         - "profile"
         - "openid"
       CallbackURLs: 
-        - !Sub "https://${Stage}.api.diamory.de/?callback"
+        - "https://app.diamory.de/?callback"
       LogoutURLs:
-        - !Sub "https://${Stage}.api.diamory.de/?logout"
+        - "https://app.diamory.de/?logout"
       SupportedIdentityProviders:
         - "COGNITO"
 
@@ -188,7 +191,7 @@ Resources:
       DomainName: !Sub "${Stage}.api.diamory.de"
       DomainValidationOptions:
         - DomainName: !Sub "${Stage}.api.diamory.de"
-          HostedZoneId: "Z02112923J7IQK3X4KU7D"
+          HostedZoneId: !Ref HostedZone
       ValidationMethod: DNS
 
   Api:
@@ -209,7 +212,7 @@ Resources:
         CertificateArn: !Ref ApiDomainCertificate
         EndpointConfiguration: REGIONAL
         Route53:
-          HostedZoneId: "Z02112923J7IQK3X4KU7D"
+          HostedZoneId: !Ref HostedZone
 
 
   

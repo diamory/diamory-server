@@ -8,7 +8,7 @@ region = "eu-central-1"
 profile = "diamory"
 capabilities = "CAPABILITY_NAMED_IAM"
 image_repositories = []
-parameter_overrides = "Stage=\"staging\""
+parameter_overrides = "Stage='staging', Account='828803652383', HostedZone='Z02112923J7IQK3X4KU7D'"
 confirm_changeset = true
 
 [prod.deploy.parameters]
@@ -19,5 +19,5 @@ region = "eu-central-1"
 profile = "diamory"
 capabilities = "CAPABILITY_NAMED_IAM"
 image_repositories = []
-parameter_overrides = "Stage=\"prod\""
+parameter_overrides = "Stage='prod', Account='828803652383', HostedZone='Z02112923J7IQK3X4KU7D'"
 confirm_changeset = true

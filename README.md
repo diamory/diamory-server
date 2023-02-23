@@ -2,6 +2,26 @@
 
 This repository contains the source code for [diamory](https://diamory.de/) backend (aws sam application).
 
+## Requisites (In Case of a new account)
+On a new AWS account, you will have to do the following steps for preparation, before you can deploy this application:
+* Registrate the `diamory.de` Domain in [AWS Route 53](https://us-east-1.console.aws.amazon.com/route53/v2/home).
+* Create an EmailIdentity for `app.diamory.de`, using [AWS SES](https://eu-central-1.console.aws.amazon.com/ses/home) mit folgenden Einstellungen
+  * Identitätstyp: Domain
+  * Domäne: app.diamory.de
+  * Erweiterte DKIM-Einstellungen:
+    * Indentitätstyp: Easy DKIM
+    * DKIM-Signaturschlüssellänge: RSA_2048_BIT
+    * Veröffentlichen von DNS-Datensätzen in Route53: true (anhaken)
+    * DKIM-Signaturen: true (anhaken)
+* Create a user with full access to CloudFormation and all services, used by this application.
+* Save the credentials in `~/.aws/credentials` and/or `~/.aws/config` under profile `diamory`.
+* Put the ID of your AWS account and the id of the hosted zone of `diamory.de` into the `samconfig.toml` file. \
+  Example:
+  * accountId: 42
+  * hostedZoneId: Z0815
+  * samconfig.toml line for staging: `parameter_overrides = "Stage='staging', Account='42', HostedZone='Z0815'"`
+  * samconfig.toml line for prod:    `parameter_overrides = "Stage='prod', Account='42', HostedZone='Z0815'"`
+
 ## Deployment
 
 You will need the AWS SAM CLI.
@@ -12,7 +32,7 @@ To use the SAM CLI, you need the following tools.
 * Node.js - [Install Node.js 18](https://nodejs.org/en/), including the NPM package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
-You will need an aws profile named `diamory`, with credentials specified (`~/.aws/config` and/or `~/.aws/credentials`), to run deploy command.
+You will need an aws profile named `diamory`, with credentials specified (`~/.aws/config` and/or `~/.aws/credentials`), to run deploy command. The respective user must have full access to cloudFormation and all used services.
 
 ### Deploy for dev (staging)
 To update or re-deploy the staging (development) stage, if it was deployed at least once, simply run:
@@ -67,9 +87,7 @@ To remove a stage, all S3 Buckets, specified in `template.yaml` and contained in
 See [error messages](https://eu-central-1.console.aws.amazon.com/cloudformation/home) to determine which S3 Bucket deletion failed due to un-emptyness.
 
 ## Resources
-
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
 
 ## License
-
 This project is licensed under the [MIT License](LICENSE.txt)
