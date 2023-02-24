@@ -48,7 +48,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     console.error({ err });
     const errMsg = err ? (err as Error).message : '';
     return {
-      statusCode: 500,
+      statusCode: errMsg === missingItemError ? 404 : 500,
       headers,
       body: JSON.stringify({
         message: `some error happened: ${errMsg}`,

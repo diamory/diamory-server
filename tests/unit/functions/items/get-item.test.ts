@@ -73,7 +73,7 @@ describe('Get Item', (): void => {
     const { statusCode, body, headers } = await lambdaHandler(event);
 
     const { message, item } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(404);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(item).is.null();

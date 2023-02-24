@@ -29,12 +29,15 @@ const buildTestEvent = (
   pathWithPlaceholders: string,
   parameters: string[],
   body: object | string,
-  isBase64Encoded: boolean
+  isBase64Encoded: boolean,
+  authorization = 'token'
 ): APIGatewayProxyEventV2WithJWTAuthorizer => {
   const { path, pathParameters } = applicateParameters(pathWithPlaceholders, parameters);
   return {
     body: typeof body === 'object' ? JSON.stringify(body) : body,
-    headers: {},
+    headers: {
+      authorization
+    },
     isBase64Encoded,
     pathParameters,
     queryStringParameters: {},

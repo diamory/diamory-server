@@ -70,8 +70,12 @@ Resources:
       VerificationMessageTemplate:
         DefaultEmailOption: CONFIRM_WITH_CODE
         EmailSubject: "Bestätigungs-Code"
-        EmailMessage: "Hallo, hier ist dein Bestätigunscode, um deine Email-Adresse zu bestätigen und deinen Account zu aktivieren: {####}"
-
+        EmailMessage: >
+          Hallo,
+          
+          hier ist dein Bestätigunscode, um deine Email-Adresse zu bestätigen und deinen diamory-Account zu aktivieren: {####}
+          
+          Viele Grüße
   
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -168,6 +172,44 @@ Resources:
               - Effect: Allow
                 Action: "dynamodb:GetItem"
                 Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:eu-central-1:*:*"
+              - Effect: Allow
+                Action: "logs:CreateLogGroup"
+                Resource: "*"
+
+  ExecutionRoleForAccounts:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName: !Sub "diamory-role-for-accounts-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub "diamory-role-for-accounts-${Stage}-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "dynamodb:PutItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:DeleteItem"
+                #TODO: specify only app.diamory.de instead of *, when SES is out of its sandbox 
+                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
+              - Effect: Allow
+                Action: "ses:SendEmail"
+                Resource: "arn:aws:ses:eu-central-1:*:identity/*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -570,5 +612,48 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+
+
+  #                                      _       
+  #      __ _  ___ ___ ___  _   _ _ __ | |_ ___ 
+  #     / _` |/ __/ __/ _ \| | | | '_ \| __/ __|
+  #    | (_| | (_| (_| (_) | |_| | | | | |_\__ \
+  #     \__,_|\___\___\___/ \__,_|_| |_|\__|___/
+
+  AddAcountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-add-account-${Stage}"
+      CodeUri: src/functions/accounts/add-account
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRoleForAccounts.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          AccountTableName: !Sub "diamory-account-${Stage}"
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /account
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-ses"
+          - "@aws-sdk/client-cognito-identity-provider"
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
