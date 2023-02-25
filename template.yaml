@@ -249,10 +249,6 @@ Resources:
                 - !Ref UserPoolClient
               issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
         DefaultAuthorizer: ManagerAuthorizer
-      #DefinitionBody:
-      #  openapi: 3.0.1
-      #  info:
-      #    title: !Ref 'AWS::StackName'
       CorsConfiguration:
         AllowCredentials: true
         AllowOrigins:
@@ -274,7 +270,6 @@ Resources:
 
 
   
-
   #    ██████   █████  ████████  █████  
   #    ██   ██ ██   ██    ██    ██   ██ 
   #    ██   ██ ███████    ██    ███████ 
@@ -660,6 +655,41 @@ Resources:
             ApiId: !Ref Api
             Path: /account
             Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-ses"
+          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+  ChangeEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-change-email-${Stage}"
+      CodeUri: src/functions/accounts/change-email
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRoleForAccounts.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          AccountTableName: !Sub "diamory-account-${Stage}"
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /email
+            Method: put
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
