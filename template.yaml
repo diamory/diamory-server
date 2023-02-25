@@ -249,6 +249,22 @@ Resources:
                 - !Ref UserPoolClient
               issuer: !Sub "https://cognito-idp.eu-central-1.amazonaws.com/${UserPool}"
         DefaultAuthorizer: ManagerAuthorizer
+      #DefinitionBody:
+      #  openapi: 3.0.1
+      #  info:
+      #    title: !Ref 'AWS::StackName'
+      CorsConfiguration:
+        AllowCredentials: true
+        AllowOrigins:
+          - "https://app.diamory.de"
+          - "https://dev.app.diamory.de"
+        AllowMethods: 
+          - "*"
+        AllowHeaders:
+          - "*"
+        ExposeHeaders:
+          - "*"
+
       Domain:
         DomainName: !Sub "${Stage}.api.diamory.de"
         CertificateArn: !Ref ApiDomainCertificate
