@@ -24,7 +24,6 @@ jest.mock('../../../../src/functions/payloads/delete-payload/cognitoClient', () 
 });
 
 const bucketName = process.env.PayloadsBucketName;
-const accountTableName = process.env.AccountTableName;
 const testChecksum = 'd1d733a8041744d6e4b7b991b5f38df48a3767acd674c9df231c92068801a460';
 const testBody = Buffer.from('testContent', 'utf8');
 

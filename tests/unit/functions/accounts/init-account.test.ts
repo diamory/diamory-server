@@ -1,5 +1,5 @@
 import { lambdaHandler, accountAlreadyInitializedError } from '../../../../src/functions/accounts/init-account/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { setTestAccountStatus, getAndResetGivenUpdateUserAttributesParams } from '../../mocks/cognitoMock';
 
