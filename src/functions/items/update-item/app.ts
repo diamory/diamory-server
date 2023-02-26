@@ -1,6 +1,7 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { getUser } from './cognitoClient';
+import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
@@ -15,18 +16,12 @@ interface AnyItem {
   [key: string]: unknown;
 }
 
-const checkAccountStatus = async (accountId: string): Promise<void> => {
+const checkAccountStatus = async (AccessToken: string): Promise<void> => {
   const params = {
-    Key: { accountId },
-    TableName: process.env.AccountTableName
+    AccessToken
   };
-  const command = new GetCommand(params);
-  const { Item } = await dynamoDBClient.send(command);
-
-  if (!Item) {
-    throw new Error(notAllowedError);
-  }
-  if (Item.status !== 'active') {
+  const user = await getUser(params);
+  if (user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value !== 'active') {
     throw new Error(notAllowedError);
   }
 };

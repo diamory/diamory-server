@@ -9,7 +9,7 @@ interface GivenMailParams {
 
 let givenMailParams: GivenMailParams = {};
 
-const getAndResetGivenParams = (): GivenMailParams => {
+const getAndResetGivenSendEmailParams = (): GivenMailParams => {
   const value = givenMailParams;
   givenMailParams = {};
   return value;
@@ -23,4 +23,4 @@ const sendEmail = async (params: SendEmailCommandInput): Promise<SendEmailComman
   return { MessageId: '', $metadata: {} };
 };
 
-export { sendEmail, getAndResetGivenParams };
+export { sendEmail, getAndResetGivenSendEmailParams };

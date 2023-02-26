@@ -31,9 +31,9 @@ Globals:
     Timeout: 3
     Environment:
       Variables:
-        AccountTableName: !Sub "diamory-account-${Stage}"
         ItemTableName: !Sub "diamory-item-${Stage}"
         PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+        UserPoolId: !Ref UserPool
         PriceInEuro: 3
 
 Resources:
@@ -63,6 +63,26 @@ Resources:
            DeveloperOnlyAttribute: false
            Mutable: true
            Required: true
+        -  AttributeDataType: String
+           Name: status
+           DeveloperOnlyAttribute: true
+           Mutable: true
+           Required: false
+        -  AttributeDataType: Boolean
+           Name: try
+           DeveloperOnlyAttribute: true
+           Mutable: true
+           Required: false
+        -  AttributeDataType: Number
+           Name: expires
+           DeveloperOnlyAttribute: true
+           Mutable: true
+           Required: false
+        -  AttributeDataType: Number
+           Name: credit
+           DeveloperOnlyAttribute: true
+           Mutable: true
+           Required: false
       AliasAttributes:
         - "email"
       UsernameConfiguration:
@@ -140,9 +160,6 @@ Resources:
                   - "dynamodb:UpdateItem"
                 Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-item-${Stage}"
               - Effect: Allow
-                Action: "dynamodb:GetItem"
-                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
-              - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
@@ -176,9 +193,6 @@ Resources:
                   - "s3:DeleteObject"
                 Resource: !Sub "arn:aws:s3:::diamory-payloads-${Stage}/*"
               - Effect: Allow
-                Action: "dynamodb:GetItem"
-                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
-              - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
@@ -206,16 +220,12 @@ Resources:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
-                Action:
-                  - "dynamodb:PutItem"
-                  - "dynamodb:GetItem"
-                  - "dynamodb:UpdateItem"
-                  - "dynamodb:DeleteItem"
-                #TODO: specify only app.diamory.de instead of *, when SES is out of its sandbox 
-                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-account-${Stage}"
-              - Effect: Allow
                 Action: "ses:SendEmail"
+                # TODO: specify only app.diamory.de instead of *, when SES is out of its sandbox
                 Resource: "arn:aws:ses:eu-central-1:*:identity/*"
+              - Effect: Allow
+                Action: "cognito-idp:AdminUpdateUserAttributes"
+                Resource: !Sub "arn:aws:cognito-idp:eu-central-1:*:userpool/${UserPool}"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -324,19 +334,6 @@ Resources:
               - "checksum"
             ProjectionType: "INCLUDE"
 
-  AccountTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "diamory-account-${Stage}"
-      TableClass: "STANDARD"
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: "accountId"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "accountId"
-          KeyType: "HASH"
-
 
 
   #    ███████ ██    ██ ███    ██  ██████ ████████ ██  ██████  ███    ██ ███████ 
@@ -381,6 +378,7 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
   GetItemFunction:
     Type: AWS::Serverless::Function
@@ -441,6 +439,7 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
   DeleteItemFunction:
     Type: AWS::Serverless::Function
@@ -471,6 +470,7 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
 
   #                        _                 _     
@@ -508,8 +508,7 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
   GetPayloadFunction:
     Type: AWS::Serverless::Function
@@ -568,8 +567,7 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
   DeletePayloadFunction:
     Type: AWS::Serverless::Function
@@ -599,8 +597,7 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
+          - "@aws-sdk/client-cognito-identity-provider"
 
 
 
@@ -610,11 +607,11 @@ Resources:
   #    | (_| | (_| (_| (_) | |_| | | | | |_\__ \
   #     \__,_|\___\___\___/ \__,_|_| |_|\__|___/
 
-  AddAcountFunction:
+  InitAcountFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "diamory-add-account-${Stage}"
-      CodeUri: src/functions/accounts/add-account
+      FunctionName: !Sub "diamory-init-account-${Stage}"
+      CodeUri: src/functions/accounts/init-account
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRoleForAccounts.Arn
@@ -627,38 +624,6 @@ Resources:
           Properties:
             ApiId: !Ref Api
             Path: /account
-            Method: post
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-ses"
-          - "@aws-sdk/client-cognito-identity-provider"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-  ChangeEmailFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-change-email-${Stage}"
-      CodeUri: src/functions/accounts/change-email
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForAccounts.Arn
-      MemorySize: 128
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref Api
-            Path: /email
             Method: put
     Metadata:
       BuildMethod: esbuild
@@ -669,7 +634,4 @@ Resources:
         EntryPoints: 
           - app.ts
         External:
-          - "@aws-sdk/client-ses"
           - "@aws-sdk/client-cognito-identity-provider"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"

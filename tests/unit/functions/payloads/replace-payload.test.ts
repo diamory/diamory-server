@@ -8,8 +8,7 @@ import { buildTestEvent, accountId } from '../../event';
 import { assert } from 'assertthat';
 import { s3Client } from '../../localRes/s3Client';
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { dynamoDBClient } from '../../localRes/dynamoDBClient';
-import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { setTestAccountStatus } from '../../mocks/cognitoMock';
 
 jest.mock('../../../../src/functions/payloads/replace-payload/s3Client', () => {
   const originalModule = jest.requireActual('../../localRes/s3Client');
@@ -18,8 +17,8 @@ jest.mock('../../../../src/functions/payloads/replace-payload/s3Client', () => {
   };
 });
 
-jest.mock('../../../../src/functions/payloads/replace-payload/dynamoDBClient', () => {
-  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
+jest.mock('../../../../src/functions/payloads/replace-payload/cognitoClient', () => {
+  const originalModule = jest.requireActual('../../mocks/cognitoMock');
   return {
     ...originalModule
   };
@@ -71,24 +70,6 @@ const deletePayloads = async (): Promise<void> => {
   await s3Client.send(command2);
 };
 
-const putAccount = async (status: string): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Item: { accountId, status }
-  };
-  const command = new PutCommand(params);
-  await dynamoDBClient.send(command);
-};
-
-const deleteAccount = async (): Promise<void> => {
-  const params = {
-    TableName: accountTableName,
-    Key: { accountId }
-  };
-  const command = new DeleteCommand(params);
-  await dynamoDBClient.send(command);
-};
-
 describe('Replace Payload', (): void => {
   beforeEach(async (): Promise<void> => {
     await putPayload();
@@ -96,11 +77,10 @@ describe('Replace Payload', (): void => {
 
   afterEach(async (): Promise<void> => {
     await deletePayloads();
-    await deleteAccount();
   });
 
   test('returns with success on active account when updated.', async (): Promise<void> => {
-    await putAccount('active');
+    setTestAccountStatus('active');
     const event = buildTestEvent(
       'put',
       'payload/{oldChecksum}/{newChecksum}',
@@ -122,7 +102,7 @@ describe('Replace Payload', (): void => {
   });
 
   test('returns with error on invalid old checksum.', async (): Promise<void> => {
-    await putAccount('active');
+    setTestAccountStatus('active');
     const event = buildTestEvent(
       'put',
       'payload/{oldChecksum}/{newChecksum}',
@@ -144,7 +124,7 @@ describe('Replace Payload', (): void => {
   });
 
   test('returns with error on invalid new checksum.', async (): Promise<void> => {
-    await putAccount('active');
+    setTestAccountStatus('active');
     const event = buildTestEvent(
       'put',
       'payload/{oldChecksum}/{newChecksum}',
@@ -166,28 +146,7 @@ describe('Replace Payload', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    await putAccount('suspended');
-    const event = buildTestEvent(
-      'put',
-      'payload/{oldChecksum}/{newChecksum}',
-      [testChecksum, newTestChecksum],
-      Buffer.from(newTestBody).toString('base64'),
-      true
-    );
-
-    const { body, statusCode, headers } = await lambdaHandler(event);
-
-    const oldPayloadBody = await getPayloadBody(testChecksum);
-    const newPayloadBody = await getPayloadBody(newTestChecksum);
-    const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
-    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
-    assert.that(oldPayloadBody).is.equalTo(testBody);
-    assert.that(newPayloadBody).is.null();
-  });
-
-  test('returns with error on missing account.', async (): Promise<void> => {
+    setTestAccountStatus('suspended');
     const event = buildTestEvent(
       'put',
       'payload/{oldChecksum}/{newChecksum}',
