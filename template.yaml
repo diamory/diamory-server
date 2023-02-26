@@ -11,10 +11,6 @@ Description: >
 
   Sample SAM Template for diamory-server
 
-Globals:
-  Function:
-    Timeout: 3
-
 Parameters:
   Stage:
     Type: String
@@ -29,6 +25,15 @@ Parameters:
   HostedZone:
     Type: String
     Description: "ID of the hosted zone for diamory.de in Route 53"
+
+Globals:
+  Function:
+    Timeout: 3
+    Environment:
+      Variables:
+        AccountTableName: !Sub "diamory-account-${Stage}"
+        ItemTableName: !Sub "diamory-item-${Stage}"
+        PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
 
 Resources:
 
@@ -357,10 +362,6 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          ItemTableName: !Sub "diamory-item-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -391,9 +392,6 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          ItemTableName: !Sub "diamory-item-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -424,10 +422,6 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          ItemTableName: !Sub "diamory-item-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -458,10 +452,6 @@ Resources:
       MemorySize: 256
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          ItemTableName: !Sub "diamory-item-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -500,10 +490,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -535,9 +521,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -567,10 +550,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -602,10 +581,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -645,9 +620,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
@@ -680,9 +652,6 @@ Resources:
       MemorySize: 128
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          AccountTableName: !Sub "diamory-account-${Stage}"
       Events:
         HttpApiGetEvent:
           Type: HttpApi
