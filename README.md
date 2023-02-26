@@ -86,6 +86,9 @@ aws cloudformation delete-stack --stack-name diamory-server--dev
 To remove a stage, all S3 Buckets, specified in `template.yaml` and contained in the stage-stack must be empty. \
 See [error messages](https://eu-central-1.console.aws.amazon.com/cloudformation/home) to determine which S3 Bucket deletion failed due to un-emptyness.
 
+## Price
+To change the price, change it in `template.yaml` in `Global` section, and in `jest.setEnvVars.js`. Variable name: `PriceInEuro`
+
 ## Resources
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
 

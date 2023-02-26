@@ -34,6 +34,7 @@ Globals:
         AccountTableName: !Sub "diamory-account-${Stage}"
         ItemTableName: !Sub "diamory-item-${Stage}"
         PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+        PriceInEuro: 3
 
 Resources:
 
