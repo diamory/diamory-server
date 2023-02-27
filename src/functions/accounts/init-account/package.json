@@ -1,7 +1,7 @@
 {
-  "name": "add-item",
-  "version": "0.1.0",
-  "description": "Lambda Function to add a payload metadata item into dynamoDB.",
+  "name": "init-account",
+  "version": "0.1.1",
+  "description": "Lambda Function to initialize the user account in cognito.",
   "main": "app.js",
   "author": "Mark Herrmann",
   "license": "MIT",

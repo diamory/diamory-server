@@ -1,7 +1,7 @@
 {
-  "name": "add-payload",
-  "version": "0.1.0",
-  "description": "Lambda Function to add a payload object into s3 bucket.",
+  "name": "replace-payload",
+  "version": "0.1.3",
+  "description": "Lambda Function to replace a s3 bucket paylod object with another.",
   "main": "app.js",
   "author": "Mark Herrmann",
   "license": "MIT",
