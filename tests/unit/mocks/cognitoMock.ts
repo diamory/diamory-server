@@ -2,11 +2,14 @@ import {
   GetUserCommandInput,
   GetUserCommandOutput,
   AdminUpdateUserAttributesCommandInput,
-  AdminUpdateUserAttributesCommandOutput
+  AdminUpdateUserAttributesCommandOutput,
+  AdminDisableUserCommandInput,
+  AdminDisableUserCommandOutput
 } from '@aws-sdk/client-cognito-identity-provider';
 
 let accountStatus = '';
 let givenUpdateUserAttributesParams: AdminUpdateUserAttributesCommandInput | null = null;
+let givenDisableUserParams: AdminDisableUserCommandInput | null = null;
 
 const setTestAccountStatus = (status: string): void => {
   accountStatus = status;
@@ -15,6 +18,12 @@ const setTestAccountStatus = (status: string): void => {
 const getAndResetGivenUpdateUserAttributesParams = (): AdminUpdateUserAttributesCommandInput | null => {
   const value = givenUpdateUserAttributesParams;
   givenUpdateUserAttributesParams = null;
+  return value;
+};
+
+const getAndResetGivenDisableUserParams = (): AdminDisableUserCommandInput | null => {
+  const value = givenDisableUserParams;
+  givenDisableUserParams = null;
   return value;
 };
 
@@ -42,4 +51,16 @@ const updateUserAttributes = async (
   return { $metadata: {} };
 };
 
-export { getUser, updateUserAttributes, setTestAccountStatus, getAndResetGivenUpdateUserAttributesParams };
+const disableUser = async (params: AdminDisableUserCommandInput): Promise<AdminDisableUserCommandOutput> => {
+  givenDisableUserParams = params;
+  return { $metadata: {} };
+};
+
+export {
+  getUser,
+  updateUserAttributes,
+  disableUser,
+  setTestAccountStatus,
+  getAndResetGivenUpdateUserAttributesParams,
+  getAndResetGivenDisableUserParams
+};

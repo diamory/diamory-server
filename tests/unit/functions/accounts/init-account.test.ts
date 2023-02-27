@@ -17,7 +17,7 @@ const testAccount = {
   try: true
 };
 
-describe('Add Accout', (): void => {
+describe('Init Accout', (): void => {
   test('returns with success when account is initialized.', async (): Promise<void> => {
     setTestAccountStatus('');
     const event = buildTestEvent('put', '/account', [], '', false);

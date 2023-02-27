@@ -224,7 +224,9 @@ Resources:
                 # TODO: specify only app.diamory.de instead of *, when SES is out of its sandbox
                 Resource: "arn:aws:ses:eu-central-1:*:identity/*"
               - Effect: Allow
-                Action: "cognito-idp:AdminUpdateUserAttributes"
+                Action:
+                  - "cognito-idp:AdminUpdateUserAttributes"
+                  - "cognito-idp:AdminDisableUser"
                 Resource: !Sub "arn:aws:cognito-idp:eu-central-1:*:userpool/${UserPool}"
               - Effect: Allow
                 Action:
@@ -624,6 +626,35 @@ Resources:
           Properties:
             ApiId: !Ref Api
             Path: /account
+            Method: put
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-cognito-identity-provider"
+
+  DisableAcountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-disable-account-${Stage}"
+      CodeUri: src/functions/accounts/disable-account
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRoleForAccounts.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /account/disable
             Method: put
     Metadata:
       BuildMethod: esbuild
