@@ -278,7 +278,6 @@ Resources:
           - "*"
         ExposeHeaders:
           - "*"
-
       Domain:
         DomainName: !Sub "${Stage}.api.diamory.de"
         CertificateArn: !Ref ApiDomainCertificate
