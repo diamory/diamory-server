@@ -1,6 +1,6 @@
 {
   "name": "init-account",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lambda Function to initialize the user account in cognito.",
   "main": "app.js",
   "author": "Mark Herrmann",

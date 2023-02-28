@@ -17,13 +17,23 @@ const checkAccountStatus = async (AccessToken: string): Promise<void> => {
   }
 };
 
+const calculateExpired = (): number => {
+  const date = new Date();
+  date.setMonth(date.getMonth() + 1);
+  date.setDate(date.getDate() - 1);
+  date.setHours(23);
+  date.setMinutes(59);
+  date.setSeconds(0);
+  return date.getTime();
+};
+
 const initAccount = async (Username: string): Promise<void> => {
   const params = {
     UserPoolId: process.env.UserPoolId,
     Username,
     UserAttributes: [
       { Name: 'dev:custom:status', Value: 'active' },
-      { Name: 'dev:custom:expires', Value: (Date.now() + 30 * 24 * 60 * 60 * 1000).toString() },
+      { Name: 'dev:custom:expires', Value: calculateExpired().toString() },
       { Name: 'dev:custom:credit', Value: '0' },
       { Name: 'dev:custom:try', Value: 'true' }
     ]

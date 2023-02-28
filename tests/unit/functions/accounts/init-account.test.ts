@@ -3,6 +3,11 @@ import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { setTestAccountStatus, getAndResetGivenUpdateUserAttributesParams } from '../../mocks/cognitoMock';
 
+const fakeDateTime = new Date('2021-03-04 12:00');
+const expireDateTime = new Date('2021-04-03 23:59:00');
+
+jest.useFakeTimers().setSystemTime(fakeDateTime);
+
 jest.mock('../../../../src/functions/accounts/init-account/cognitoClient', () => {
   const originalModule = jest.requireActual('../../mocks/cognitoMock');
   return {
@@ -13,7 +18,7 @@ jest.mock('../../../../src/functions/accounts/init-account/cognitoClient', () =>
 const testAccount = {
   status: 'active',
   credit: 0.0,
-  expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  expires: expireDateTime.getTime(),
   try: true
 };
 
@@ -34,15 +39,10 @@ describe('Init Accout', (): void => {
     assert.that(attributes).is.not.null();
     assert.that(attributes?.find((e) => e.Name === 'dev:custom:status')?.Value ?? '').is.equalTo(status);
     assert.that(attributes?.find((e) => e.Name === 'dev:custom:credit')?.Value ?? '').is.equalTo(credit.toString());
+    assert.that(parseInt(attributes?.find((e) => e.Name === 'dev:custom:expires')?.Value ?? '0')).is.equalTo(expires);
     assert
       .that(attributes?.find((e) => e.Name === 'dev:custom:try')?.Value ?? '')
       .is.equalTo(tryValue ? 'true' : 'false');
-    assert
-      .that(parseInt(attributes?.find((e) => e.Name === 'dev:custom:expires')?.Value ?? '0'))
-      .is.atMost(expires + 10_000);
-    assert
-      .that(parseInt(attributes?.find((e) => e.Name === 'dev:custom:expires')?.Value ?? '0'))
-      .is.atLeast(expires - 10_000);
   });
 
   test('returns with error if account was already initialized.', async (): Promise<void> => {
