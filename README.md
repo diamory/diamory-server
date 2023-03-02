@@ -2,7 +2,9 @@
 
 This repository contains the source code for [diamory](https://diamory.de/) backend (aws sam application).
 
-## Requisites (In Case of a new account)
+## Requisites
+
+### new aws account
 On a new AWS account, you will have to do the following steps for preparation, before you can deploy this application:
 * Registrate the `diamory.de` Domain in [AWS Route 53](https://us-east-1.console.aws.amazon.com/route53/v2/home).
 * Create an EmailIdentity for `app.diamory.de`, using [AWS SES](https://eu-central-1.console.aws.amazon.com/ses/home) mit folgenden Einstellungen
@@ -22,17 +24,16 @@ On a new AWS account, you will have to do the following steps for preparation, b
   * samconfig.toml line for staging: `parameter_overrides = "Stage='staging', Account='42', HostedZone='Z0815'"`
   * samconfig.toml line for prod:    `parameter_overrides = "Stage='prod', Account='42', HostedZone='Z0815'"`
 
-## Deployment
+### General
+For developnent, testing and deployment you will need the following tools:
 
-You will need the AWS SAM CLI.
-
-To use the SAM CLI, you need the following tools.
-
+* AWS CLI - [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 * SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 * Node.js - [Install Node.js 18](https://nodejs.org/en/), including the NPM package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
-You will need an aws profile named `diamory`, with credentials specified (`~/.aws/config` and/or `~/.aws/credentials`), to run deploy command. The respective user must have full access to cloudFormation and all used services.
+
+## Deployment
 
 ### Deploy for dev (staging)
 To update or re-deploy the staging (development) stage, if it was deployed at least once, simply run:
