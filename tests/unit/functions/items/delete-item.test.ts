@@ -93,7 +93,7 @@ describe('Delete Item', (): void => {
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(404);
     assert.that(message).is.equalTo(`some error happened: ${missingItemError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();
@@ -114,7 +114,7 @@ describe('Delete Item', (): void => {
 
     const Item = await getItem();
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(403);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();

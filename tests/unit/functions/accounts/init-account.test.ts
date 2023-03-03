@@ -53,7 +53,7 @@ describe('Init Accout', (): void => {
 
     const attributes = getAndResetGivenUpdateUserAttributesParams()?.UserAttributes;
     const { message: apiMessage } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(400);
     assert.that(apiMessage).is.equalTo(`some error happened: ${accountAlreadyInitializedError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(attributes).is.undefined();

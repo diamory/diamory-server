@@ -7,14 +7,12 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const checkAccountStatus = async (AccessToken: string): Promise<void> => {
+const isNewAccount = async (AccessToken: string): Promise<boolean> => {
   const params = {
     AccessToken
   };
   const user = await getUser(params);
-  if (user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value) {
-    throw new Error(accountAlreadyInitializedError);
-  }
+  return !user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
 };
 
 const calculateExpired = (): number => {
@@ -41,29 +39,49 @@ const initAccount = async (Username: string): Promise<void> => {
   await updateUserAttributes(params);
 };
 
+const success201Response = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 201,
+    headers,
+    body: JSON.stringify({
+      message: 'ok'
+    })
+  };
+};
+
+const errorAlreadyInitializedResponse = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 400,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${accountAlreadyInitializedError}`
+    })
+  };
+};
+
+const error500Response = (err: unknown): APIGatewayProxyResult => {
+  const errMsg = err ? (err as Error).message : '';
+  return {
+    statusCode: 500,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
+};
+
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const username: string = event.requestContext.authorizer.jwt.claims.username as string;
     const token = event.headers.authorization ?? '';
-    await checkAccountStatus(token);
+    if (!(await isNewAccount(token))) {
+      return errorAlreadyInitializedResponse();
+    }
     await initAccount(username);
-    return {
-      statusCode: 201,
-      headers,
-      body: JSON.stringify({
-        message: 'ok'
-      })
-    };
+    return success201Response();
   } catch (err: unknown) {
     console.error({ err });
-    const errMsg = err ? (err as Error).message : '';
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        message: `some error happened: ${errMsg}`
-      })
-    };
+    return error500Response(err);
   }
 };
 

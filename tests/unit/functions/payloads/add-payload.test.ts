@@ -89,7 +89,7 @@ describe('Add Payload', (): void => {
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(400);
     assert.that(message).is.equalTo(`some error happened: ${invalidChecksumError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();
@@ -109,7 +109,7 @@ describe('Add Payload', (): void => {
 
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(403);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();

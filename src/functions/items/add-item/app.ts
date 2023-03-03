@@ -16,17 +16,19 @@ interface AnyItem {
   [key: string]: unknown;
 }
 
-const checkAccountStatus = async (AccessToken: string): Promise<void> => {
+const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
   const params = {
     AccessToken
   };
   const user = await getUser(params);
-  if (user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value !== 'active') {
-    throw new Error(notAllowedError);
+  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  if (status) {
+    return status === 'active';
   }
+  return false;
 };
 
-const checkItem = (item: AnyItem): void => {
+const isValidItem = (item: AnyItem): boolean => {
   const required = {
     id: 'string',
     checksum: 'string',
@@ -34,18 +36,19 @@ const checkItem = (item: AnyItem): void => {
   };
   for (const [key, value] of Object.entries(required)) {
     if (!(key in item) || typeof item[key] !== value) {
-      throw new Error(invalidItemError);
+      return false;
     }
     if (!item[key]) {
-      throw new Error(invalidItemError);
+      return false;
     }
   }
   if (!/^[A-Fa-f0-9]{64}$/u.test(item.checksum as string)) {
-    throw new Error(invalidItemError);
+    return false;
   }
+  return true;
 };
 
-const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
+const addItem = async (Item: DiamoryItemWithAccountId): Promise<boolean> => {
   const params = {
     TableName: process.env.ItemTableName,
     Item,
@@ -54,40 +57,65 @@ const addItem = async (Item: DiamoryItemWithAccountId): Promise<void> => {
   const command = new PutCommand(params);
   try {
     await dynamoDBClient.send(command);
+    return true;
   } catch {
-    throw new Error(itemAlreadyExistsError);
+    return false;
   }
+};
+
+const success201Response = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 201,
+    headers,
+    body: JSON.stringify({
+      message: 'ok'
+    })
+  };
+};
+
+const error4xxResponse = (statusCode: number, errMsg: string): APIGatewayProxyResult => {
+  return {
+    statusCode,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
+};
+
+const error500Response = (err: unknown): APIGatewayProxyResult => {
+  const errMsg = err ? (err as Error).message : '';
+  return {
+    statusCode: 500,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const token = event.headers.authoization ?? '';
-    await checkAccountStatus(token);
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
-    checkItem(itemWithoutAccountId as unknown as AnyItem);
+    if (!(await isActiveAccount(token))) {
+      return error4xxResponse(403, notAllowedError);
+    }
+    if (!isValidItem(itemWithoutAccountId as unknown as AnyItem)) {
+      return error4xxResponse(400, invalidItemError);
+    }
     const item = {
       ...itemWithoutAccountId,
       accountId
     };
-    await addItem(item);
-    return {
-      statusCode: 201,
-      headers,
-      body: JSON.stringify({
-        message: 'ok'
-      })
-    };
+    if (!(await addItem(item))) {
+      return error4xxResponse(400, itemAlreadyExistsError);
+    }
+    return success201Response();
   } catch (err: unknown) {
     console.error({ err });
-    const errMsg = err ? (err as Error).message : '';
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        message: `some error happened: ${errMsg}`
-      })
-    };
+    return error500Response(err);
   }
 };
 

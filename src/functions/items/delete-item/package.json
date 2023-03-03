@@ -1,6 +1,6 @@
 {
   "name": "delete-item",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Lambda Function to delete a payload metadata item from dynamoDB.",
   "main": "app.js",
   "author": "Mark Herrmann",

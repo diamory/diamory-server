@@ -25,7 +25,6 @@ jest.mock('../../../../src/functions/payloads/replace-payload/cognitoClient', ()
 });
 
 const bucketName = process.env.PayloadsBucketName;
-const accountTableName = process.env.AccountTableName;
 const testChecksum = 'd1d733a8041744d6e4b7b991b5f38df48a3767acd674c9df231c92068801a460';
 const testBody = Buffer.from('testContent', 'utf8');
 const newTestChecksum = '2c6c86190554227524a49df554d8a1ad1a87200d277445b0b4d68455ac629a6b';
@@ -116,7 +115,7 @@ describe('Replace Payload', (): void => {
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(400);
     assert.that(message).is.equalTo(`some error happened: ${invalidOldChecksumError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);
@@ -138,7 +137,7 @@ describe('Replace Payload', (): void => {
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(400);
     assert.that(message).is.equalTo(`some error happened: ${invalidNewChecksumError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);
@@ -160,7 +159,7 @@ describe('Replace Payload', (): void => {
     const oldPayloadBody = await getPayloadBody(testChecksum);
     const newPayloadBody = await getPayloadBody(newTestChecksum);
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(403);
     assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(oldPayloadBody).is.equalTo(testBody);

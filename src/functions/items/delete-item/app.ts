@@ -10,17 +10,19 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const checkAccountStatus = async (AccessToken: string): Promise<void> => {
+const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
   const params = {
     AccessToken
   };
   const user = await getUser(params);
-  if (user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value !== 'active') {
-    throw new Error(notAllowedError);
+  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  if (status) {
+    return status === 'active';
   }
+  return false;
 };
 
-const deleteItem = async (id: string, accountId: string): Promise<void> => {
+const deleteItem = async (id: string, accountId: string): Promise<boolean> => {
   const params = {
     TableName: process.env.ItemTableName,
     Key: { id, accountId },
@@ -33,35 +35,58 @@ const deleteItem = async (id: string, accountId: string): Promise<void> => {
   const command = new DeleteCommand(params);
   try {
     await dynamoDBClient.send(command);
+    return true;
   } catch {
-    throw new Error(missingItemError);
+    return false;
   }
+};
+
+const success200Response = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({
+      message: 'ok'
+    })
+  };
+};
+
+const error4xxResponse = (statusCode: number, errMsg: string): APIGatewayProxyResult => {
+  return {
+    statusCode,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
+};
+
+const error500Response = (err: unknown): APIGatewayProxyResult => {
+  const errMsg = err ? (err as Error).message : '';
+  return {
+    statusCode: 500,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
 };
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const token = event.headers.authoization ?? '';
-    await checkAccountStatus(token);
     const id = event.pathParameters?.id ?? '';
-    await deleteItem(id, accountId);
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        message: 'ok'
-      })
-    };
+    if (!(await isActiveAccount(token))) {
+      return error4xxResponse(403, notAllowedError);
+    }
+    if (!(await deleteItem(id, accountId))) {
+      return error4xxResponse(404, missingItemError);
+    }
+    return success200Response();
   } catch (err: unknown) {
     console.error({ err });
-    const errMsg = err ? (err as Error).message : '';
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        message: `some error happened: ${errMsg}`
-      })
-    };
+    return error500Response(err);
   }
 };
 

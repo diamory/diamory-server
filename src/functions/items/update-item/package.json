@@ -1,6 +1,6 @@
 {
   "name": "update-item",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Lambda Function to update a payload metadata item into dynamoDB.",
   "main": "app.js",
   "author": "Mark Herrmann",

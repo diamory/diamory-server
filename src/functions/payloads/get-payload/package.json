@@ -1,6 +1,6 @@
 {
   "name": "get-payload",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lambda Function to get a payload object from s3 bucket.",
   "main": "app.js",
   "author": "Mark Herrmann",

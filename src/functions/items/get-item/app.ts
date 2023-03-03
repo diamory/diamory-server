@@ -26,35 +26,54 @@ const getItem = async (id: string, accountId: string): Promise<AnyItem | undefin
   }
 };
 
+const success200Response = (item: AnyItem): APIGatewayProxyResult => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { accountId: unused, ...itemProperties } = item;
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({
+      message: 'ok',
+      item: { ...itemProperties }
+    })
+  };
+};
+
+const errorMissingItemResponse = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 404,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${missingItemError}`,
+      item: null
+    })
+  };
+};
+
+const error500Response = (err: unknown): APIGatewayProxyResult => {
+  const errMsg = err ? (err as Error).message : '';
+  return {
+    statusCode: 500,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`,
+      item: null
+    })
+  };
+};
+
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
     const item = await getItem(id, accountId);
     if (!item) {
-      throw new Error(missingItemError);
+      return errorMissingItemResponse();
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { accountId: unused, ...itemProperties } = item;
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        message: 'ok',
-        item: { ...itemProperties }
-      })
-    };
+    return success200Response(item);
   } catch (err: unknown) {
     console.error({ err });
-    const errMsg = err ? (err as Error).message : '';
-    return {
-      statusCode: errMsg === missingItemError ? 404 : 500,
-      headers,
-      body: JSON.stringify({
-        message: `some error happened: ${errMsg}`,
-        item: null
-      })
-    };
+    return error500Response(err);
   }
 };
 

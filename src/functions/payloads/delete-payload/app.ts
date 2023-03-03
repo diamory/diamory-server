@@ -10,21 +10,21 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const checkAccountStatus = async (AccessToken: string): Promise<void> => {
+const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
   const params = {
     AccessToken
   };
   const user = await getUser(params);
-  if (user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value !== 'active') {
-    throw new Error(notAllowedError);
+  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  if (status) {
+    return status === 'active';
   }
+  return false;
 };
 
-const checkChecksum = (checksum: string): void => {
+const isValidChecksum = (checksum: string): boolean => {
   const checksumPattern = /^[a-f0-9]{64}$/u;
-  if (!checksumPattern.test(checksum)) {
-    throw new Error(invalidChecksumError);
-  }
+  return checksumPattern.test(checksum);
 };
 
 const deletePayload = async (accountId: string, checksum: string): Promise<void> => {
@@ -36,31 +36,53 @@ const deletePayload = async (accountId: string, checksum: string): Promise<void>
   await s3Client.send(command);
 };
 
+const success200Response = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({
+      message: 'ok'
+    })
+  };
+};
+
+const error4xxResponse = (statusCode: number, errMsg: string): APIGatewayProxyResult => {
+  return {
+    statusCode,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
+};
+
+const error500Response = (err: unknown): APIGatewayProxyResult => {
+  const errMsg = err ? (err as Error).message : '';
+  return {
+    statusCode: 500,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${errMsg}`
+    })
+  };
+};
+
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const token = event.headers.authorization ?? '';
-    await checkAccountStatus(token);
     const checksum = event.pathParameters?.checksum ?? '';
-    checkChecksum(checksum);
+    if (!(await isActiveAccount(token))) {
+      return error4xxResponse(403, notAllowedError);
+    }
+    if (!isValidChecksum(checksum)) {
+      return error4xxResponse(400, invalidChecksumError);
+    }
     await deletePayload(accountId, checksum);
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        message: 'ok'
-      })
-    };
+    return success200Response();
   } catch (err: unknown) {
     console.error({ err });
-    const errMsg = err ? (err as Error).message : '';
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        message: `some error happened: ${errMsg}`
-      })
-    };
+    return error500Response(err);
   }
 };
 

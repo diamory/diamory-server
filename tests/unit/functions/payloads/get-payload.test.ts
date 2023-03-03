@@ -64,7 +64,7 @@ describe('Get Payload', (): void => {
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
 
     const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(500);
+    assert.that(statusCode).is.equalTo(400);
     assert.that(isBase64Encoded).is.false();
     assert.that(message).is.equalTo(`some error happened: ${invalidChecksumError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
