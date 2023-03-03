@@ -32,6 +32,7 @@ For developnent, testing and deployment you will need the following tools:
 * Node.js - [Install Node.js 18](https://nodejs.org/en/), including the NPM package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
+On Windows you will need [gitbash] to run `npm run test` correctly
 
 ## Deployment
 

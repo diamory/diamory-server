@@ -13,7 +13,7 @@
     "compile_": "tsc",
     "unit_": "jest --runInBand",
     "lint": "eslint '*.ts' --quiet --fix",
-    "test": "./scripts/tests.sh",
+    "test": "bash -c './scripts/tests.sh'",
     "deploy:dev": "sam build && sam deploy --config-env staging --profile diamory",
     "deploy:production": "sam build && sam deploy --config-env prod --profile diamory",
     "drop-dev-yes": "aws cloudformation delete-stack --stack-name diamory-server--dev --profile diamory",
