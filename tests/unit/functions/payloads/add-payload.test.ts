@@ -3,11 +3,11 @@ import {
   notAllowedError,
   invalidChecksumError
 } from '../../../../src/functions/payloads/add-payload/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { s3Client } from '../../localRes/s3Client';
 import { GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { setTestAccountStatus } from '../../mocks/cognitoMock';
+import { putAccount, deleteAccount } from '../../helpers/accounts';
 
 jest.mock('../../../../src/functions/payloads/add-payload/s3Client', () => {
   const originalModule = jest.requireActual('../../localRes/s3Client');
@@ -16,14 +16,15 @@ jest.mock('../../../../src/functions/payloads/add-payload/s3Client', () => {
   };
 });
 
-jest.mock('../../../../src/functions/payloads/add-payload/cognitoClient', () => {
-  const originalModule = jest.requireActual('../../mocks/cognitoMock');
+jest.mock('../../../../src/functions/payloads/add-payload/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
   return {
     ...originalModule
   };
 });
 
 const bucketName = process.env.PayloadsBucketName;
+const accountId = process.env.testAccountId ?? '';
 const testChecksum = 'd1d733a8041744d6e4b7b991b5f38df48a3767acd674c9df231c92068801a460';
 const testBody = Buffer.from('testContent', 'utf8');
 
@@ -53,10 +54,11 @@ const deletePayload = async (): Promise<void> => {
 describe('Add Payload', (): void => {
   afterEach(async (): Promise<void> => {
     await deletePayload();
+    await deleteAccount();
   });
 
   test('returns with success on active account.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const event = buildTestEvent(
       'post',
       'payload/{checksum}',
@@ -76,7 +78,7 @@ describe('Add Payload', (): void => {
   });
 
   test('returns with error on invalid checksum.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const event = buildTestEvent(
       'post',
       'payload/{checksum}',
@@ -96,7 +98,7 @@ describe('Add Payload', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    setTestAccountStatus('suspended');
+    await putAccount('suspended');
     const event = buildTestEvent(
       'post',
       'payload/{checksum}',

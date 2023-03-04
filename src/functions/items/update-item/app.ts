@@ -1,7 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { getUser } from './cognitoClient';
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
@@ -16,12 +15,13 @@ interface AnyItem {
   [key: string]: unknown;
 }
 
-const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
+const isActiveAccount = async (accountId: string): Promise<boolean> => {
   const params = {
-    AccessToken
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId }
   };
-  const user = await getUser(params);
-  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  const command = new GetCommand(params);
+  const status = (await dynamoDBClient.send(command))?.Item?.status;
   if (status) {
     return status === 'active';
   }
@@ -105,9 +105,8 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const token: string = event.headers.authoization ?? '';
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
-    if (!(await isActiveAccount(token))) {
+    if (!(await isActiveAccount(accountId))) {
       return error4xxResponse(403, notAllowedError);
     }
     if (!isValidItem(itemWithoutAccountId as unknown as AnyItem)) {

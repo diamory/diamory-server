@@ -1,7 +1,8 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
-import { getUser } from './cognitoClient';
 import { s3Client } from './s3Client';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { dynamoDBClient } from './dynamoDBClient';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const notAllowedError = 'you are not allowed to do so';
 const invalidChecksumError = 'invalid checksum';
@@ -10,12 +11,13 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
+const isActiveAccount = async (accountId: string): Promise<boolean> => {
   const params = {
-    AccessToken
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId }
   };
-  const user = await getUser(params);
-  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  const command = new GetCommand(params);
+  const status = (await dynamoDBClient.send(command))?.Item?.status;
   if (status) {
     return status === 'active';
   }
@@ -71,9 +73,8 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const token = event.headers.authorization ?? '';
     const checksum = event.pathParameters?.checksum ?? '';
-    if (!(await isActiveAccount(token))) {
+    if (!(await isActiveAccount(accountId))) {
       return error4xxResponse(403, notAllowedError);
     }
     if (!isValidChecksum(checksum)) {

@@ -4,13 +4,13 @@ import {
   invalidItemError,
   notAllowedError
 } from '../../../../src/functions/items/update-item/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { AnyItem } from '../../types/generics';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem } from '../../../../src/functions/items/update-item/item';
-import { setTestAccountStatus } from '../../mocks/cognitoMock';
+import { putAccount, deleteAccount } from '../../helpers/accounts';
 
 jest.mock('../../../../src/functions/items/update-item/dynamoDBClient', () => {
   const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
@@ -19,14 +19,8 @@ jest.mock('../../../../src/functions/items/update-item/dynamoDBClient', () => {
   };
 });
 
-jest.mock('../../../../src/functions/items/update-item/cognitoClient', () => {
-  const originalModule = jest.requireActual('../../mocks/cognitoMock');
-  return {
-    ...originalModule
-  };
-});
-
 const itemTableName = process.env.ItemTableName;
+const accountId = process.env.testAccountId ?? '';
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -76,10 +70,11 @@ const deleteItem = async (): Promise<void> => {
 describe('Update Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
+    await deleteAccount();
   });
 
   test('returns with success when existent item is modified.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = modifiedItem;
     const event = buildTestEvent('put', '/item', [], modifiedItem, false);
@@ -100,7 +95,7 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const event = buildTestEvent('put', '/item', [], modifiedItem, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
@@ -114,7 +109,7 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error on invalid item.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('put', '/item', [], {}, false);
@@ -135,7 +130,7 @@ describe('Update Item', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    setTestAccountStatus('suspended');
+    await putAccount('suspended');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('put', '/item', [], modifiedItem, false);

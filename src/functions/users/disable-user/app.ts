@@ -1,16 +1,33 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { disableUser } from './cognitoClient';
+import { dynamoDBClient } from './dynamoDBClient';
+import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+
+const UserPoolId = process.env.UserPool;
 
 const headers = {
   'Content-Type': 'application/json'
 };
 
-const disableAccount = async (Username: string): Promise<void> => {
-  const params = {
-    UserPoolId: process.env.UserPoolId,
-    Username
-  };
+const disableTheUser = async (Username: string): Promise<void> => {
+  const params = { UserPoolId, Username };
   await disableUser(params);
+};
+
+const disableTheAccount = async (accountId: string): Promise<void> => {
+  const params = {
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId },
+    ExpressionAttributeValues: {
+      ':status': 'disabled'
+    },
+    ExpressionAttributeNames: {
+      '#s': 'status'
+    },
+    UpdateExpression: 'set #s = :status'
+  };
+  const command = new UpdateCommand(params);
+  await dynamoDBClient.send(command);
 };
 
 const success200Response = (): APIGatewayProxyResult => {
@@ -37,7 +54,9 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const username: string = event.requestContext.authorizer.jwt.claims.username as string;
-    await disableAccount(username);
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
+    await disableTheUser(username);
+    await disableTheAccount(accountId);
     return success200Response();
   } catch (err: unknown) {
     console.error({ err });

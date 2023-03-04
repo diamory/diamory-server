@@ -20,11 +20,11 @@
     "drop-prod-yes-i-really-know-what-i-am-doing": "aws cloudformation delete-stack --stack-name diamory-server --profile diamory"
   },
   "devDependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "3.279.0",
-    "@aws-sdk/client-dynamodb": "3.271.0",
+    "@aws-sdk/client-cognito-identity-provider": "3.272.0",
+    "@aws-sdk/client-dynamodb": "3.272.0",
     "@aws-sdk/client-s3": "3.272.0",
-    "@aws-sdk/client-ses": "3.279.0",
-    "@aws-sdk/lib-dynamodb": "3.271.0",
+    "@aws-sdk/client-ses": "3.272.0",
+    "@aws-sdk/lib-dynamodb": "3.272.0",
     "@types/aws-lambda": "8.10.110",
     "@types/jest": "29.4.0",
     "@types/node": "18.13.0",

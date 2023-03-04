@@ -5,7 +5,7 @@ interface PathParametersAndPath {
   pathParameters: APIGatewayProxyEventPathParameters;
 }
 
-const accountId = '123456789012';
+const accountId = process.env.testAccountId ?? '';
 
 const applicateParameters = (pathWithPlaceholders: string, parameters: string[]): PathParametersAndPath => {
   let path = pathWithPlaceholders;
@@ -78,4 +78,4 @@ const buildTestEvent = (
   };
 };
 
-export { buildTestEvent, accountId };
+export { buildTestEvent };

@@ -1,18 +1,12 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
-import { getUser, updateUserAttributes } from './cognitoClient';
+import { dynamoDBClient } from './dynamoDBClient';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { Account } from './account';
 
-const accountAlreadyInitializedError = 'account already exists.';
+const accountAlreadyCreatedError = 'account already exists.';
 
 const headers = {
   'Content-Type': 'application/json'
-};
-
-const isNewAccount = async (AccessToken: string): Promise<boolean> => {
-  const params = {
-    AccessToken
-  };
-  const user = await getUser(params);
-  return !user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
 };
 
 const calculateExpired = (): number => {
@@ -25,18 +19,29 @@ const calculateExpired = (): number => {
   return date.getTime();
 };
 
-const initAccount = async (Username: string): Promise<void> => {
-  const params = {
-    UserPoolId: process.env.UserPoolId,
-    Username,
-    UserAttributes: [
-      { Name: 'dev:custom:status', Value: 'active' },
-      { Name: 'dev:custom:expires', Value: calculateExpired().toString() },
-      { Name: 'dev:custom:credit', Value: '0' },
-      { Name: 'dev:custom:try', Value: 'true' }
-    ]
+const addAccount = async (accountId: string, username: string): Promise<boolean> => {
+  const Item: Account = {
+    v: 1,
+    accountId,
+    username,
+    status: 'active',
+    suspended: 0,
+    credit: 0,
+    expires: calculateExpired(),
+    try: true
   };
-  await updateUserAttributes(params);
+  const params = {
+    TableName: process.env.AccountTableName,
+    Item,
+    ConditionExpression: 'attribute_not_exists(accountId)'
+  };
+  const command = new PutCommand(params);
+  try {
+    await dynamoDBClient.send(command);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const success201Response = (): APIGatewayProxyResult => {
@@ -49,12 +54,12 @@ const success201Response = (): APIGatewayProxyResult => {
   };
 };
 
-const errorAlreadyInitializedResponse = (): APIGatewayProxyResult => {
+const errorAlreadyCreatedResponse = (): APIGatewayProxyResult => {
   return {
     statusCode: 400,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${accountAlreadyInitializedError}`
+      message: `some error happened: ${accountAlreadyCreatedError}`
     })
   };
 };
@@ -72,12 +77,11 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
+    const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const username: string = event.requestContext.authorizer.jwt.claims.username as string;
-    const token = event.headers.authorization ?? '';
-    if (!(await isNewAccount(token))) {
-      return errorAlreadyInitializedResponse();
+    if (!(await addAccount(accountId, username))) {
+      return errorAlreadyCreatedResponse();
     }
-    await initAccount(username);
     return success201Response();
   } catch (err: unknown) {
     console.error({ err });
@@ -85,4 +89,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, accountAlreadyInitializedError };
+export { lambdaHandler, accountAlreadyCreatedError };

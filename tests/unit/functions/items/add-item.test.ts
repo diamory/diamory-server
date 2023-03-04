@@ -4,13 +4,13 @@ import {
   invalidItemError,
   itemAlreadyExistsError
 } from '../../../../src/functions/items/add-item/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem, DiamoryItemWithAccountId } from '../../../../src/functions/items/add-item/item';
 import { AnyItem } from '../../types/generics';
-import { setTestAccountStatus } from '../../mocks/cognitoMock';
+import { putAccount, deleteAccount } from '../../helpers/accounts';
 
 jest.mock('../../../../src/functions/items/add-item/dynamoDBClient', () => {
   const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
@@ -19,14 +19,8 @@ jest.mock('../../../../src/functions/items/add-item/dynamoDBClient', () => {
   };
 });
 
-jest.mock('../../../../src/functions/items/add-item/cognitoClient', () => {
-  const originalModule = jest.requireActual('../../mocks/cognitoMock');
-  return {
-    ...originalModule
-  };
-});
-
 const itemTableName = process.env.ItemTableName;
+const accountId = process.env.testAccountId ?? '';
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -58,10 +52,11 @@ const deleteItem = async (): Promise<void> => {
 describe('Add Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
+    await deleteAccount();
   });
 
   test('returns with success on active account when item is new.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const event = buildTestEvent('post', '/item', [], testItem, false);
     const { id, checksum, payloadTimestamp } = testItem;
 
@@ -81,7 +76,7 @@ describe('Add Item', (): void => {
   });
 
   test('returns with error when item already exists.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const addEvent = buildTestEvent('post', '/item', [], testItem, false);
     await lambdaHandler(addEvent);
     const modifiedItem = { ...testItem, payloadTimestamp: 96 };
@@ -97,22 +92,8 @@ describe('Add Item', (): void => {
     assert.that(Item?.payloadTimestamp).is.equalTo(testItem.payloadTimestamp);
   });
 
-  test('returns with error on suspended account.', async (): Promise<void> => {
-    setTestAccountStatus('suspended');
-    const event = buildTestEvent('post', '/item', [], testItem, false);
-
-    const { statusCode, body, headers } = await lambdaHandler(event);
-
-    const Item = await getItem();
-    const { message } = JSON.parse(body);
-    assert.that(statusCode).is.equalTo(403);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
-    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
-    assert.that(Item).is.undefined();
-  });
-
   test('returns with error on invalid item.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     const event = buildTestEvent('post', '/item', [], {}, false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
@@ -121,6 +102,20 @@ describe('Add Item', (): void => {
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(400);
     assert.that(message).is.equalTo(`some error happened: ${invalidItemError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(Item).is.undefined();
+  });
+
+  test('returns with error on suspended account.', async (): Promise<void> => {
+    await putAccount('suspended');
+    const event = buildTestEvent('post', '/item', [], testItem, false);
+
+    const { statusCode, body, headers } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.undefined();
   });

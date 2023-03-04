@@ -1,7 +1,7 @@
 {
-  "name": "delete-item",
-  "version": "0.1.7",
-  "description": "Lambda Function to delete a payload metadata item from dynamoDB.",
+  "name": "add-account",
+  "version": "0.1.4",
+  "description": "Lambda Function to add account to dynamodb account table.",
   "main": "app.js",
   "author": "Mark Herrmann",
   "license": "MIT",

@@ -31,8 +31,9 @@ Globals:
     Timeout: 3
     Environment:
       Variables:
-        ItemTableName: !Sub "diamory-item-${Stage}"
-        PayloadsBucketName: !Sub "diamory-payloads-${Stage}"
+        ItemTableName: !Ref ItemTable
+        AccountTableName: !Ref AccountTable
+        PayloadsBucketName: !Ref PayloadsBucket
         UserPoolId: !Ref UserPool
         PriceInEuro: 3
 
@@ -47,7 +48,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub "diamory-user-pool-${Stage}"
+      UserPoolName: !Sub "diamory-user-pooll-${Stage}"
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
       Policies:
@@ -63,26 +64,6 @@ Resources:
            DeveloperOnlyAttribute: false
            Mutable: true
            Required: true
-        -  AttributeDataType: String
-           Name: status
-           DeveloperOnlyAttribute: true
-           Mutable: true
-           Required: false
-        -  AttributeDataType: Boolean
-           Name: try
-           DeveloperOnlyAttribute: true
-           Mutable: true
-           Required: false
-        -  AttributeDataType: Number
-           Name: expires
-           DeveloperOnlyAttribute: true
-           Mutable: true
-           Required: false
-        -  AttributeDataType: Number
-           Name: credit
-           DeveloperOnlyAttribute: true
-           Mutable: true
-           Required: false
       AliasAttributes:
         - "email"
       UsernameConfiguration:
@@ -134,10 +115,10 @@ Resources:
   #    ██   ██ ██           ██       ██   ██ ██      ██      ██           ██      ██ 
   #    ██   ██ ███████ ███████       ██   ██  ██████  ██████ ███████ ███████ ███████
 
-  ExecutionRoleForItems:
+  ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "diamory-role-for-items-${Stage}"
+      RoleName: !Sub "diamory-role-${Stage}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -148,7 +129,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: !Sub "diamory-role-for-items-${Stage}-policy"
+        - PolicyName: !Sub "diamory-role-policy-${Stage}"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -158,75 +139,26 @@ Resources:
                   - "dynamodb:DeleteItem"
                   - "dynamodb:GetItem"
                   - "dynamodb:UpdateItem"
-                Resource: !Sub "arn:aws:dynamodb:eu-central-1:*:table/diamory-item-${Stage}"
-              - Effect: Allow
-                Action:
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: "arn:aws:logs:eu-central-1:*:*"
-              - Effect: Allow
-                Action: "logs:CreateLogGroup"
-                Resource: "*"
-
-  ExecutionRoleForPayloads:
-    Type: AWS::IAM::Role
-    Properties: 
-      RoleName: !Sub "diamory-role-for-payloads-${Stage}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Policies:
-        - PolicyName: !Sub "diamory-role-for-payloads-${Stage}-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
+                  - "dynamodb:Query"
+                Resource:
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${ItemTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
                   - "s3:GetObject"
                   - "s3:DeleteObject"
-                Resource: !Sub "arn:aws:s3:::diamory-payloads-${Stage}/*"
-              - Effect: Allow
-                Action:
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: "arn:aws:logs:eu-central-1:*:*"
-              - Effect: Allow
-                Action: "logs:CreateLogGroup"
-                Resource: "*"
-
-  ExecutionRoleForAccounts:
-    Type: AWS::IAM::Role
-    Properties: 
-      RoleName: !Sub "diamory-role-for-accounts-${Stage}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Policies:
-        - PolicyName: !Sub "diamory-role-for-accounts-${Stage}-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
+                Resource: !Sub "arn:aws:s3:::${PayloadsBucket}/*"
               - Effect: Allow
                 Action: "ses:SendEmail"
                 # TODO: specify only app.diamory.de instead of *, when SES is out of its sandbox
                 Resource: "arn:aws:ses:eu-central-1:*:identity/*"
               - Effect: Allow
                 Action:
-                  - "cognito-idp:AdminUpdateUserAttributes"
                   - "cognito-idp:AdminDisableUser"
+                  - "cognito-idp:AdminDeleteUser"
                 Resource: !Sub "arn:aws:cognito-idp:eu-central-1:*:userpool/${UserPool}"
               - Effect: Allow
                 Action:
@@ -316,24 +248,56 @@ Resources:
           AttributeType: "S"
         - AttributeName: "id"
           AttributeType: "S"
-        - AttributeName: "payloadTimestamp"
-          AttributeType: "N"
       KeySchema:
         - AttributeName: "accountId"
           KeyType: "HASH"
         - AttributeName: "id"
           KeyType: "RANGE"
+
+  AccountTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "diamory-account-${Stage}"
+      TableClass: "STANDARD"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "v"
+          AttributeType: "N"
+        - AttributeName: "accountId"
+          AttributeType: "S"
+        - AttributeName: "status"
+          AttributeType: "S"
+        - AttributeName: "expires"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "v"
+          KeyType: "HASH"
+        - AttributeName: "accountId"
+          KeyType: "RANGE"
       LocalSecondaryIndexes:
-        - IndexName: timestamp-index
+        - IndexName: expires-index
           KeySchema:
-            - AttributeName: "accountId"
+            - AttributeName: "v"
               KeyType: "HASH"
-            - AttributeName: "payloadTimestamp"
+            - AttributeName: "expires"
               KeyType: "RANGE"
           Projection:
-            NonKeyAttributes:
-              - "checksum"
-            ProjectionType: "INCLUDE"
+            NonKeyAttributes: 
+              - "username"
+              - "status"
+              - "suspended"
+              - "credit"
+            ProjectionType: INCLUDE
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: "v"
+              KeyType: "HASH"
+            - AttributeName: "status"
+              KeyType: "RANGE"
+          Projection:
+            NonKeyAttributes: 
+              - "username"
+            ProjectionType: INCLUDE
 
 
 
@@ -357,7 +321,7 @@ Resources:
       CodeUri: src/functions/items/add-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForItems.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -379,7 +343,6 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
-          - "@aws-sdk/client-cognito-identity-provider"
 
   GetItemFunction:
     Type: AWS::Serverless::Function
@@ -388,7 +351,7 @@ Resources:
       CodeUri: src/functions/items/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForItems.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -418,7 +381,7 @@ Resources:
       CodeUri: src/functions/items/update-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForItems.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -440,7 +403,6 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
-          - "@aws-sdk/client-cognito-identity-provider"
 
   DeleteItemFunction:
     Type: AWS::Serverless::Function
@@ -449,7 +411,7 @@ Resources:
       CodeUri: src/functions/items/delete-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForItems.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 256
       Architectures:
         - x86_64
@@ -471,7 +433,6 @@ Resources:
         External:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
-          - "@aws-sdk/client-cognito-identity-provider"
 
 
   #                        _                 _     
@@ -488,7 +449,7 @@ Resources:
       CodeUri: src/functions/payloads/add-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForPayloads.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -509,7 +470,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   GetPayloadFunction:
     Type: AWS::Serverless::Function
@@ -518,7 +480,7 @@ Resources:
       CodeUri: src/functions/payloads/get-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForPayloads.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -547,7 +509,7 @@ Resources:
       CodeUri: src/functions/payloads/replace-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForPayloads.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -568,7 +530,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   DeletePayloadFunction:
     Type: AWS::Serverless::Function
@@ -577,7 +540,7 @@ Resources:
       CodeUri: src/functions/payloads/delete-payload
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForPayloads.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -598,7 +561,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
 
 
@@ -608,14 +572,14 @@ Resources:
   #    | (_| | (_| (_| (_) | |_| | | | | |_\__ \
   #     \__,_|\___\___\___/ \__,_|_| |_|\__|___/
 
-  InitAcountFunction:
+  AddAcountFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "diamory-init-account-${Stage}"
-      CodeUri: src/functions/accounts/init-account
+      FunctionName: !Sub "diamory-add-account-${Stage}"
+      CodeUri: src/functions/accounts/add-account
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForAccounts.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -625,7 +589,7 @@ Resources:
           Properties:
             ApiId: !Ref Api
             Path: /account
-            Method: put
+            Method: post
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -635,16 +599,24 @@ Resources:
         EntryPoints: 
           - app.ts
         External:
-          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
-  DisableAcountFunction:
+
+
+  #    _   _ ___  ___ _ __ ___ 
+  #   | | | / __|/ _ \ '__/ __|
+  #   | |_| \__ \  __/ |  \__ \
+  #    \__,_|___/\___|_|  |___/
+
+  DisableUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "diamory-disable-account-${Stage}"
-      CodeUri: src/functions/accounts/disable-account
+      FunctionName: !Sub "diamory-disable-user-${Stage}"
+      CodeUri: src/functions/users/disable-user
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRoleForAccounts.Arn
+      Role: !GetAtt ExecutionRole.Arn
       MemorySize: 128
       Architectures:
         - x86_64
@@ -653,7 +625,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /account/disable
+            Path: /user/disable
             Method: put
     Metadata:
       BuildMethod: esbuild
@@ -665,3 +637,5 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"

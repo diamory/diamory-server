@@ -1,7 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { getUser } from './cognitoClient';
-import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist. do add request instead';
 const notAllowedError = 'you are not allowed to do so';
@@ -10,12 +9,13 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const isActiveAccount = async (AccessToken: string): Promise<boolean> => {
+const isActiveAccount = async (accountId: string): Promise<boolean> => {
   const params = {
-    AccessToken
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId }
   };
-  const user = await getUser(params);
-  const status = user?.UserAttributes?.find((e) => e.Name === 'dev:custom:status')?.Value;
+  const command = new GetCommand(params);
+  const status = (await dynamoDBClient.send(command))?.Item?.status;
   if (status) {
     return status === 'active';
   }
@@ -75,9 +75,8 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const token = event.headers.authoization ?? '';
     const id = event.pathParameters?.id ?? '';
-    if (!(await isActiveAccount(token))) {
+    if (!(await isActiveAccount(accountId))) {
       return error4xxResponse(403, notAllowedError);
     }
     if (!(await deleteItem(id, accountId))) {

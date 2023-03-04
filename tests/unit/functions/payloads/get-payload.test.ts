@@ -3,7 +3,7 @@ import {
   payloadDoesNotExistError,
   invalidChecksumError
 } from '../../../../src/functions/payloads/get-payload/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { s3Client } from '../../localRes/s3Client';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -16,6 +16,7 @@ jest.mock('../../../../src/functions/payloads/get-payload/s3Client', () => {
 });
 
 const bucketName = process.env.PayloadsBucketName;
+const accountId = process.env.testAccountId ?? '';
 const testChecksum = 'd1d733a8041744d6e4b7b991b5f38df48a3767acd674c9df231c92068801a460';
 const testBody = Buffer.from('testContent', 'utf8');
 

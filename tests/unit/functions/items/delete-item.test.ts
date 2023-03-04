@@ -1,11 +1,11 @@
 import { lambdaHandler, missingItemError, notAllowedError } from '../../../../src/functions/items/delete-item/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { AnyItem } from '../../types/generics';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DiamoryItem } from '../../types/item';
-import { setTestAccountStatus } from '../../mocks/cognitoMock';
+import { putAccount, deleteAccount } from '../../helpers/accounts';
 
 jest.mock('../../../../src/functions/items/delete-item/dynamoDBClient', () => {
   const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
@@ -14,14 +14,8 @@ jest.mock('../../../../src/functions/items/delete-item/dynamoDBClient', () => {
   };
 });
 
-jest.mock('../../../../src/functions/items/delete-item/cognitoClient', () => {
-  const originalModule = jest.requireActual('../../mocks/cognitoMock');
-  return {
-    ...originalModule
-  };
-});
-
 const itemTableName = process.env.ItemTableName;
+const accountId = process.env.testAccountId ?? '';
 
 const testItem: DiamoryItem = {
   id: 'id',
@@ -65,10 +59,11 @@ const deleteItem = async (): Promise<void> => {
 describe('Delete Item', (): void => {
   afterEach(async (): Promise<void> => {
     await deleteItem();
+    await deleteAccount();
   });
 
   test('returns with success when existent item is deleted.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     await putItem();
     const { id } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', [id], {}, false);
@@ -84,7 +79,7 @@ describe('Delete Item', (): void => {
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {
-    setTestAccountStatus('active');
+    await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false);
@@ -105,7 +100,7 @@ describe('Delete Item', (): void => {
   });
 
   test('returns with error on suspended account.', async (): Promise<void> => {
-    setTestAccountStatus('suspended');
+    await putAccount('suspended');
     await putItem();
     const { id, checksum, payloadTimestamp } = testItem;
     const event = buildTestEvent('delete', '/item/{id}', ['missing'], {}, false);

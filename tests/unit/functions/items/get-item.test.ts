@@ -1,5 +1,5 @@
 import { lambdaHandler, missingItemError } from '../../../../src/functions/items/get-item/app';
-import { buildTestEvent, accountId } from '../../event';
+import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
@@ -13,6 +13,7 @@ jest.mock('../../../../src/functions/items/get-item/dynamoDBClient', () => {
 });
 
 const itemTableName = process.env.ItemTableName;
+const accountId = process.env.testAccountId ?? '';
 
 const testItem: DiamoryItem = {
   id: 'id',
