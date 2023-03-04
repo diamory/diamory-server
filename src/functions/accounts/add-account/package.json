@@ -1,6 +1,6 @@
 {
   "name": "add-account",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Lambda Function to add account to dynamodb account table.",
   "main": "app.js",
   "author": "Mark Herrmann",

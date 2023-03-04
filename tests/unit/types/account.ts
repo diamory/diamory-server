@@ -6,7 +6,7 @@ interface Account {
   suspended: number;
   credit: number;
   expires: number;
-  try: boolean;
+  trial: boolean;
 }
 
 export { Account };

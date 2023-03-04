@@ -28,7 +28,7 @@ const addAccount = async (accountId: string, username: string): Promise<boolean>
     suspended: 0,
     credit: 0,
     expires: calculateExpired(),
-    try: true
+    trial: true
   };
   const params = {
     TableName: process.env.AccountTableName,
