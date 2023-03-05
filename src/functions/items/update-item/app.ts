@@ -5,7 +5,7 @@ import { DiamoryItem, DiamoryItemWithAccountId } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
 const invalidItemError = 'invalid item';
-const notAllowedError = 'you are not allowed to do so';
+const invalidStatusError = 'account does not exist or has invalid status.';
 
 const headers = {
   'Content-Type': 'application/json'
@@ -107,7 +107,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
     if (!(await isActiveAccount(accountId))) {
-      return error4xxResponse(403, notAllowedError);
+      return error4xxResponse(403, invalidStatusError);
     }
     if (!isValidItem(itemWithoutAccountId as unknown as AnyItem)) {
       return error4xxResponse(400, invalidItemError);
@@ -126,4 +126,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, missingItemError, invalidItemError, notAllowedError };
+export { lambdaHandler, missingItemError, invalidItemError, invalidStatusError };

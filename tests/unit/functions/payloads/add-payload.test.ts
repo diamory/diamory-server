@@ -1,6 +1,6 @@
 import {
   lambdaHandler,
-  notAllowedError,
+  invalidStatusError,
   invalidChecksumError
 } from '../../../../src/functions/payloads/add-payload/app';
 import { buildTestEvent } from '../../event';
@@ -112,7 +112,26 @@ describe('Add Payload', (): void => {
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(payloadBody).is.null();
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    const event = buildTestEvent(
+      'post',
+      'payload/{checksum}',
+      [testChecksum],
+      Buffer.from(testBody).toString('base64'),
+      true
+    );
+
+    const { body, statusCode, headers } = await lambdaHandler(event);
+
+    const payloadBody = await getPayloadBody();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.null();
   });

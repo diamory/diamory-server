@@ -4,7 +4,7 @@ import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
-const notAllowedError = 'you are not allowed to do so';
+const invalidStatusError = 'account does not exist or has invalid status.';
 const invalidChecksumError = 'invalid checksum';
 
 const headers = {
@@ -74,7 +74,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const checksum = event.pathParameters?.checksum ?? '';
     if (!(await isActiveAccount(accountId))) {
-      return error4xxResponse(403, notAllowedError);
+      return error4xxResponse(403, invalidStatusError);
     }
     if (!isValidChecksum(checksum)) {
       return error4xxResponse(400, invalidChecksumError);
@@ -87,4 +87,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, notAllowedError, invalidChecksumError };
+export { lambdaHandler, invalidStatusError, invalidChecksumError };

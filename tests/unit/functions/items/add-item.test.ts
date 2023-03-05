@@ -1,6 +1,6 @@
 import {
   lambdaHandler,
-  notAllowedError,
+  invalidStatusError,
   invalidItemError,
   itemAlreadyExistsError
 } from '../../../../src/functions/items/add-item/app';
@@ -115,7 +115,20 @@ describe('Add Item', (): void => {
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(Item).is.undefined();
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    const event = buildTestEvent('post', '/item', [], testItem, false);
+
+    const { statusCode, body, headers } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.undefined();
   });

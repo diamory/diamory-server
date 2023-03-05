@@ -3,6 +3,7 @@ import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist';
+const invalidStatusError = 'account does not exist or has invalid status.';
 
 const headers = {
   'Content-Type': 'application/json'
@@ -11,6 +12,19 @@ const headers = {
 interface AnyItem {
   [key: string]: unknown;
 }
+
+const isEnabledAccount = async (accountId: string): Promise<boolean> => {
+  const params = {
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId }
+  };
+  const command = new GetCommand(params);
+  const status = (await dynamoDBClient.send(command))?.Item?.status;
+  if (status) {
+    return status !== 'disabled';
+  }
+  return false;
+};
 
 const getItem = async (id: string, accountId: string): Promise<AnyItem | undefined> => {
   const params = {
@@ -39,12 +53,12 @@ const success200Response = (item: AnyItem): APIGatewayProxyResult => {
   };
 };
 
-const errorMissingItemResponse = (): APIGatewayProxyResult => {
+const error4xxResponse = (statusCode: number, errMsg: string): APIGatewayProxyResult => {
   return {
-    statusCode: 404,
+    statusCode,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${missingItemError}`,
+      message: `some error happened: ${errMsg}`,
       item: null
     })
   };
@@ -66,9 +80,12 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
+    if (!(await isEnabledAccount(accountId))) {
+      return error4xxResponse(403, invalidStatusError);
+    }
     const item = await getItem(id, accountId);
     if (!item) {
-      return errorMissingItemResponse();
+      return error4xxResponse(404, missingItemError);
     }
     return success200Response(item);
   } catch (err: unknown) {
@@ -77,4 +94,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, missingItemError };
+export { lambdaHandler, missingItemError, invalidStatusError };

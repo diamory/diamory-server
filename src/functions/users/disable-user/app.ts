@@ -3,6 +3,8 @@ import { disableUser } from './cognitoClient';
 import { dynamoDBClient } from './dynamoDBClient';
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
+const invalidStatusError = 'account does not exist or has invalid status.';
+
 const UserPoolId = process.env.UserPool;
 
 const headers = {
@@ -14,20 +16,27 @@ const disableTheUser = async (Username: string): Promise<void> => {
   await disableUser(params);
 };
 
-const disableTheAccount = async (accountId: string): Promise<void> => {
+const disableTheAccount = async (accountId: string): Promise<boolean> => {
   const params = {
     TableName: process.env.AccountTableName,
     Key: { v: 1, accountId },
     ExpressionAttributeValues: {
+      ':accountId': accountId,
       ':status': 'disabled'
     },
     ExpressionAttributeNames: {
       '#s': 'status'
     },
+    ConditionExpression: 'accountId = :accountId and #s <> :status',
     UpdateExpression: 'set #s = :status'
   };
   const command = new UpdateCommand(params);
-  await dynamoDBClient.send(command);
+  try {
+    await dynamoDBClient.send(command);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const success200Response = (): APIGatewayProxyResult => {
@@ -36,6 +45,16 @@ const success200Response = (): APIGatewayProxyResult => {
     headers,
     body: JSON.stringify({
       message: 'ok'
+    })
+  };
+};
+
+const errorInvalidStatusResponse = (): APIGatewayProxyResult => {
+  return {
+    statusCode: 400,
+    headers,
+    body: JSON.stringify({
+      message: `some error happened: ${invalidStatusError}`
     })
   };
 };
@@ -55,8 +74,10 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   try {
     const username: string = event.requestContext.authorizer.jwt.claims.username as string;
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
+    if (!(await disableTheAccount(accountId))) {
+      return errorInvalidStatusResponse();
+    }
     await disableTheUser(username);
-    await disableTheAccount(accountId);
     return success200Response();
   } catch (err: unknown) {
     console.error({ err });
@@ -64,4 +85,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler };
+export { lambdaHandler, invalidStatusError };

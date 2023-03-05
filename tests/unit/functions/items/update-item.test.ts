@@ -2,7 +2,7 @@ import {
   lambdaHandler,
   missingItemError,
   invalidItemError,
-  notAllowedError
+  invalidStatusError
 } from '../../../../src/functions/items/update-item/app';
 import { buildTestEvent } from '../../event';
 import { AnyItem } from '../../types/generics';
@@ -73,7 +73,7 @@ describe('Update Item', (): void => {
     await deleteAccount();
   });
 
-  test('returns with success when existent item is modified.', async (): Promise<void> => {
+  test('returns with success when existing item is modified.', async (): Promise<void> => {
     await putAccount('active');
     await putItem();
     const { id, checksum, payloadTimestamp } = modifiedItem;
@@ -140,7 +140,27 @@ describe('Update Item', (): void => {
     const Item = await getItem();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(Item).is.not.undefined();
+    assert.that(Item).is.not.null();
+    assert.that(Item?.id).is.equalTo(id);
+    assert.that(Item?.checksum).is.equalTo(checksum);
+    assert.that(Item?.payloadTimestamp).is.equalTo(payloadTimestamp);
+    assert.that(Item?.accountId).is.equalTo(accountId);
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    await putItem();
+    const { id, checksum, payloadTimestamp } = testItem;
+    const event = buildTestEvent('put', '/item', [], modifiedItem, false);
+
+    const { statusCode, body, headers } = await lambdaHandler(event);
+
+    const Item = await getItem();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(Item).is.not.undefined();
     assert.that(Item).is.not.null();

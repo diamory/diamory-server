@@ -501,6 +501,8 @@ Resources:
           - app.ts
         External:
           - "@aws-sdk/client-s3"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
 
   ReplacePayloadFunction:
     Type: AWS::Serverless::Function

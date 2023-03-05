@@ -1,9 +1,25 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { s3Client } from './s3Client';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { dynamoDBClient } from './dynamoDBClient';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
 const payloadDoesNotExistError = 'payload does not exist';
 const invalidChecksumError = 'invalid checksum';
+const invalidStatusError = 'account does not exist or has invalid status.';
+
+const isEnabledAccount = async (accountId: string): Promise<boolean> => {
+  const params = {
+    TableName: process.env.AccountTableName,
+    Key: { v: 1, accountId }
+  };
+  const command = new GetCommand(params);
+  const status = (await dynamoDBClient.send(command))?.Item?.status;
+  if (status) {
+    return status !== 'disabled';
+  }
+  return false;
+};
 
 const isValidChecksum = (checksum: string): boolean => {
   const checksumPattern = /^[a-f0-9]{64}$/u;
@@ -69,6 +85,9 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const checksum = event.pathParameters?.checksum ?? '';
+    if (!(await isEnabledAccount(accountId))) {
+      return error4xxResponse(403, invalidStatusError);
+    }
     if (!isValidChecksum(checksum)) {
       return error4xxResponse(400, invalidChecksumError);
     }
@@ -83,4 +102,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, payloadDoesNotExistError, invalidChecksumError };
+export { lambdaHandler, payloadDoesNotExistError, invalidChecksumError, invalidStatusError };

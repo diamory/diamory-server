@@ -1,6 +1,6 @@
 import {
   lambdaHandler,
-  notAllowedError,
+  invalidStatusError,
   invalidChecksumError
 } from '../../../../src/functions/payloads/delete-payload/app';
 import { buildTestEvent } from '../../event';
@@ -108,7 +108,20 @@ describe('Delete Payload', (): void => {
     const payloadBody = await getPayloadBody();
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(message).is.equalTo(`some error happened: ${notAllowedError}`);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+    assert.that(payloadBody).is.equalTo(testBody);
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    const event = buildTestEvent('delete', 'payload/{checksum}', [testChecksum], {}, false);
+
+    const { body, statusCode, headers } = await lambdaHandler(event);
+
+    const payloadBody = await getPayloadBody();
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(payloadBody).is.equalTo(testBody);
   });

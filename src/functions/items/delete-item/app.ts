@@ -3,7 +3,7 @@ import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 const missingItemError = 'this item does not exist. do add request instead';
-const notAllowedError = 'you are not allowed to do so';
+const invalidStatusError = 'account does not exist or has invalid status.';
 
 const headers = {
   'Content-Type': 'application/json'
@@ -77,7 +77,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
     const id = event.pathParameters?.id ?? '';
     if (!(await isActiveAccount(accountId))) {
-      return error4xxResponse(403, notAllowedError);
+      return error4xxResponse(403, invalidStatusError);
     }
     if (!(await deleteItem(id, accountId))) {
       return error4xxResponse(404, missingItemError);
@@ -89,4 +89,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, missingItemError, notAllowedError };
+export { lambdaHandler, missingItemError, invalidStatusError };

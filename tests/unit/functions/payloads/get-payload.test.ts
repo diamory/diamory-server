@@ -1,15 +1,24 @@
 import {
   lambdaHandler,
   payloadDoesNotExistError,
-  invalidChecksumError
+  invalidChecksumError,
+  invalidStatusError
 } from '../../../../src/functions/payloads/get-payload/app';
 import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { s3Client } from '../../localRes/s3Client';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { putAccount, deleteAccount } from '../../helpers/accounts';
 
 jest.mock('../../../../src/functions/payloads/get-payload/s3Client', () => {
   const originalModule = jest.requireActual('../../localRes/s3Client');
+  return {
+    ...originalModule
+  };
+});
+
+jest.mock('../../../../src/functions/payloads/get-payload/dynamoDBClient', () => {
+  const originalModule = jest.requireActual('../../localRes/dynamoDBClient');
   return {
     ...originalModule
   };
@@ -46,9 +55,23 @@ describe('Get Payload', (): void => {
 
   afterEach(async (): Promise<void> => {
     await deletePayload();
+    await deleteAccount();
   });
 
-  test('returns with success and correct item.', async (): Promise<void> => {
+  test('returns with success and correct item on active account.', async (): Promise<void> => {
+    await putAccount('active');
+    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false);
+
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
+
+    assert.that(statusCode).is.equalTo(200);
+    assert.that(body).is.equalTo(Buffer.from(testBody).toString('base64'));
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/octet-stream');
+    assert.that(isBase64Encoded).is.true();
+  });
+
+  test('returns with success and correct item on suspended account.', async (): Promise<void> => {
+    await putAccount('suspended');
     const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
@@ -60,6 +83,7 @@ describe('Get Payload', (): void => {
   });
 
   test('returns with error on invalid checksum.', async (): Promise<void> => {
+    await putAccount('active');
     const event = buildTestEvent('get', 'payload/{checksum}', ['invalid'], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
@@ -71,7 +95,33 @@ describe('Get Payload', (): void => {
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
   });
 
+  test('returns with error on disabled account.', async (): Promise<void> => {
+    await putAccount('disabled');
+    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false);
+
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
+
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(isBase64Encoded).is.false();
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+  });
+
+  test('returns with error on missing account.', async (): Promise<void> => {
+    const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum], {}, false);
+
+    const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);
+
+    const { message } = JSON.parse(body);
+    assert.that(statusCode).is.equalTo(403);
+    assert.that(isBase64Encoded).is.false();
+    assert.that(message).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
+  });
+
   test('returns empty buffer if object does not exist.', async (): Promise<void> => {
+    await putAccount('active');
     const event = buildTestEvent('get', 'payload/{checksum}', [testChecksum.replace('d', 'e')], {}, false);
 
     const { body, isBase64Encoded, statusCode, headers } = await lambdaHandler(event);

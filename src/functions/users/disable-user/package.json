@@ -1,6 +1,6 @@
 {
   "name": "disable-user",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lambda Function to disable the user in cognito (currently used by user to mark it as 'to be deleted').",
   "main": "app.js",
   "author": "Mark Herrmann",

@@ -1,6 +1,6 @@
 {
   "name": "replace-payload",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Lambda Function to replace a s3 bucket paylod object with another.",
   "main": "app.js",
   "author": "Mark Herrmann",

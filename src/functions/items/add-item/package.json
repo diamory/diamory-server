@@ -1,6 +1,6 @@
 {
   "name": "add-item",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Lambda Function to add a payload metadata item into dynamoDB.",
   "main": "app.js",
   "author": "Mark Herrmann",

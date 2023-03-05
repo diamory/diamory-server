@@ -6,6 +6,7 @@ import { Account } from './account';
 const notPaidEnoughError = 'not paid enough.';
 const isNotTrialError = 'is not trial.';
 const missingAccountError = 'account does not exist.';
+const invalidStatusError = 'account does not exist or has invalid status.';
 
 const TableName = process.env.AccountTableName;
 
@@ -89,12 +90,15 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
     if (!account) {
       return error4xxResponse(404, missingAccountError);
     }
-    const { times, trial } = account;
+    const { times, trial, status } = account;
     if (times < 1) {
-      return error4xxResponse(400, notPaidEnoughError);
+      return error4xxResponse(403, notPaidEnoughError);
     }
     if (!trial) {
       return error4xxResponse(400, isNotTrialError);
+    }
+    if (status === 'disabled') {
+      return error4xxResponse(403, invalidStatusError);
     }
     await skipTrial(accountId, times - 1);
     return success200Response();
@@ -104,4 +108,4 @@ const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Pr
   }
 };
 
-export { lambdaHandler, notPaidEnoughError, isNotTrialError, missingAccountError };
+export { lambdaHandler, notPaidEnoughError, isNotTrialError, missingAccountError, invalidStatusError };
