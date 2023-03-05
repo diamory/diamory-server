@@ -68,6 +68,7 @@ describe('Get Item', (): void => {
     assert.that(item.checksum).is.equalTo(checksum);
     assert.that(item.payloadTimestamp).is.equalTo(payloadTimestamp);
     assert.that(item.accountId).is.undefined();
+    assert.that(item.v).is.undefined();
   });
 
   test('returns item on suspended account.', async (): Promise<void> => {
@@ -88,6 +89,7 @@ describe('Get Item', (): void => {
     assert.that(item.checksum).is.equalTo(checksum);
     assert.that(item.payloadTimestamp).is.equalTo(payloadTimestamp);
     assert.that(item.accountId).is.undefined();
+    assert.that(item.v).is.undefined();
   });
 
   test('returns with error due to missing item.', async (): Promise<void> => {

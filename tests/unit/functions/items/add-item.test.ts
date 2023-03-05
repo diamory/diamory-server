@@ -8,7 +8,7 @@ import { buildTestEvent } from '../../event';
 import { assert } from 'assertthat';
 import { dynamoDBClient } from '../../localRes/dynamoDBClient';
 import { GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem, DiamoryItemWithAccountId } from '../../../../src/functions/items/add-item/item';
+import { DiamoryItem, StoredDiamoryItem } from '../../../../src/functions/items/add-item/item';
 import { AnyItem } from '../../types/generics';
 import { putAccount, deleteAccount } from '../../helpers/accounts';
 
@@ -62,7 +62,7 @@ describe('Add Item', (): void => {
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
-    const Item = (await getItem()) as unknown as DiamoryItemWithAccountId;
+    const Item = (await getItem()) as unknown as StoredDiamoryItem;
     const { message } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(201);
     assert.that(message).is.equalTo('ok');

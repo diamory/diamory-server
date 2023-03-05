@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem, DiamoryItemWithAccountId } from './item';
+import { DiamoryItem, StoredDiamoryItem } from './item';
 
 const invalidStatusError = 'account does not exist or has invalid status.';
 const invalidItemError = 'invalid item';
@@ -48,7 +48,7 @@ const isValidItem = (item: AnyItem): boolean => {
   return true;
 };
 
-const addItem = async (Item: DiamoryItemWithAccountId): Promise<boolean> => {
+const addItem = async (Item: StoredDiamoryItem): Promise<boolean> => {
   const params = {
     TableName: process.env.ItemTableName,
     Item,
@@ -97,16 +97,17 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
+    const givenItem: DiamoryItem = JSON.parse(event.body ?? '{}');
     if (!(await isActiveAccount(accountId))) {
       return error4xxResponse(403, invalidStatusError);
     }
-    if (!isValidItem(itemWithoutAccountId as unknown as AnyItem)) {
+    if (!isValidItem(givenItem as unknown as AnyItem)) {
       return error4xxResponse(400, invalidItemError);
     }
-    const item = {
-      ...itemWithoutAccountId,
-      accountId
+    const item: StoredDiamoryItem = {
+      v: 1,
+      accountId,
+      ...givenItem
     };
     if (!(await addItem(item))) {
       return error4xxResponse(400, itemAlreadyExistsError);

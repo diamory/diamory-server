@@ -40,15 +40,15 @@ const getItem = async (id: string, accountId: string): Promise<AnyItem | undefin
   }
 };
 
-const success200Response = (item: AnyItem): APIGatewayProxyResult => {
+const success200Response = (Item: AnyItem): APIGatewayProxyResult => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { accountId: unused, ...itemProperties } = item;
+  const { accountId, v, ...item } = Item;
   return {
     statusCode: 200,
     headers,
     body: JSON.stringify({
       message: 'ok',
-      item: { ...itemProperties }
+      item
     })
   };
 };

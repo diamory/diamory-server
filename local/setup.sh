@@ -24,8 +24,9 @@ fi
 aws dynamodb create-table \
   --endpoint-url http://localhost:8000 \
   --table-name diamory-item--test \
-  --attribute-definitions '[{"AttributeName":"accountId","AttributeType":"S"},{"AttributeName":"id","AttributeType":"S"}]' \
+  --attribute-definitions '[{"AttributeName":"accountId","AttributeType":"S"},{"AttributeName":"id","AttributeType":"S"},{"AttributeName":"v","AttributeType":"N"}]' \
   --key-schema '[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"id","KeyType":"RANGE"}]' \
+  --local-secondary-indexes '[{"IndexName":"v-index","KeySchema":[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"v","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["id"],"ProjectionType":"INCLUDE"}}]' \
   --billing-mode PAY_PER_REQUEST \
   > /dev/null
 

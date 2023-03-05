@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { DiamoryItem, DiamoryItemWithAccountId } from './item';
+import { DiamoryItem } from './item';
 
 const missingItemError = 'this item does not exist. do add request instead';
 const invalidItemError = 'invalid item';
@@ -48,8 +48,8 @@ const isValidItem = (item: AnyItem): boolean => {
   return true;
 };
 
-const updateItem = async (Item: DiamoryItemWithAccountId, accountId: string): Promise<boolean> => {
-  const { id, checksum, payloadTimestamp } = Item;
+const updateItem = async (item: DiamoryItem, accountId: string): Promise<boolean> => {
+  const { id, checksum, payloadTimestamp } = item;
   const params = {
     TableName: process.env.ItemTableName,
     Key: { id, accountId },
@@ -105,17 +105,13 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
 const lambdaHandler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResult> => {
   try {
     const accountId: string = event.requestContext.authorizer.jwt.claims.sub as string;
-    const itemWithoutAccountId: DiamoryItem = JSON.parse(event.body ?? '{}');
+    const item: DiamoryItem = JSON.parse(event.body ?? '{}');
     if (!(await isActiveAccount(accountId))) {
       return error4xxResponse(403, invalidStatusError);
     }
-    if (!isValidItem(itemWithoutAccountId as unknown as AnyItem)) {
+    if (!isValidItem(item as unknown as AnyItem)) {
       return error4xxResponse(400, invalidItemError);
     }
-    const item = {
-      ...itemWithoutAccountId,
-      accountId
-    };
     if (!(await updateItem(item, accountId))) {
       return error4xxResponse(404, missingItemError);
     }

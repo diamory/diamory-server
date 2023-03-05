@@ -143,6 +143,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${ItemTable}"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${ItemTable}/v-index"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
               - Effect: Allow
@@ -248,11 +249,24 @@ Resources:
           AttributeType: "S"
         - AttributeName: "id"
           AttributeType: "S"
+        - AttributeName: "v"
+          AttributeType: "N"
       KeySchema:
         - AttributeName: "accountId"
           KeyType: "HASH"
         - AttributeName: "id"
           KeyType: "RANGE"
+      LocalSecondaryIndexes:
+        - IndexName: v-index
+          KeySchema:
+            - AttributeName: "accountId"
+              KeyType: "HASH"
+            - AttributeName: "v"
+              KeyType: "RANGE"
+          Projection:
+            NonKeyAttributes: 
+              - "id"
+            ProjectionType: INCLUDE
 
   AccountTable:
     Type: AWS::DynamoDB::Table

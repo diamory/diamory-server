@@ -4,8 +4,9 @@ interface DiamoryItem {
   checksum: string;
 }
 
-interface DiamoryItemWithAccountId extends DiamoryItem {
+interface StoredDiamoryItem extends DiamoryItem {
   accountId: string;
+  v: 1;
 }
 
-export { DiamoryItem, DiamoryItemWithAccountId };
+export { DiamoryItem, StoredDiamoryItem };
