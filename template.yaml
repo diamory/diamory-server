@@ -32,7 +32,7 @@ Globals:
     Environment:
       Variables:
         ItemTableName: !Ref ItemTable
-        AccountTableName: !Ref AccountTable
+        AccountTableName: !Ref AccounttTable
         PayloadsBucketName: !Ref PayloadsBucket
         UserPoolId: !Ref UserPool
         PriceInEuro: 3
@@ -142,9 +142,9 @@ Resources:
                   - "dynamodb:Query"
                 Resource:
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${ItemTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccounttTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccounttTable}/expires-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccounttTable}/status-index"
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
@@ -254,10 +254,10 @@ Resources:
         - AttributeName: "id"
           KeyType: "RANGE"
 
-  AccountTable:
+  AccounttTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "diamory-account-${Stage}"
+      TableName: !Sub "diamory-accountt-${Stage}"
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -286,7 +286,7 @@ Resources:
               - "username"
               - "status"
               - "suspended"
-              - "credit"
+              - "times"
             ProjectionType: INCLUDE
         - IndexName: status-index
           KeySchema:

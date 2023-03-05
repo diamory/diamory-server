@@ -24,7 +24,7 @@ const testAccount: Account = {
   username: 'testuser',
   status: 'active',
   suspended: 0,
-  credit: 0,
+  times: 0,
   expires: expireDateTime.getTime(),
   trial: true
 };
@@ -36,7 +36,7 @@ describe('Init Accout', (): void => {
 
   test('returns with success when account is created.', async (): Promise<void> => {
     const event = buildTestEvent('post', '/account', [], '', false);
-    const { accountId, username, status, suspended, credit, expires, trial } = testAccount;
+    const { accountId, username, status, suspended, times, expires, trial } = testAccount;
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -51,7 +51,7 @@ describe('Init Accout', (): void => {
     assert.that(account?.username).is.equalTo(username);
     assert.that(account?.status).is.equalTo(status);
     assert.that(account?.suspended).is.equalTo(suspended);
-    assert.that(account?.credit).is.equalTo(credit);
+    assert.that(account?.times).is.equalTo(times);
     assert.that(account?.expires).is.equalTo(expires);
     assert.that(account?.trial).is.equalTo(trial);
   });

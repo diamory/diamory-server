@@ -9,7 +9,7 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const calculateExpired = (): number => {
+const calculateExpires = (): number => {
   const date = new Date();
   date.setMonth(date.getMonth() + 1);
   date.setDate(date.getDate() - 1);
@@ -26,8 +26,8 @@ const addAccount = async (accountId: string, username: string): Promise<boolean>
     username,
     status: 'active',
     suspended: 0,
-    credit: 0,
-    expires: calculateExpired(),
+    times: 0,
+    expires: calculateExpires(),
     trial: true
   };
   const params = {

@@ -4,7 +4,7 @@ interface Account {
   username: string;
   status: string;
   suspended: number;
-  credit: number;
+  times: number;
   expires: number;
   trial: boolean;
 }
