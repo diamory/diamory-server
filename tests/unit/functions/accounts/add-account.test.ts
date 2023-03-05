@@ -30,7 +30,7 @@ const testAccount: Account = {
 };
 
 describe('Init Accout', (): void => {
-  afterAll(async (): Promise<void> => {
+  afterEach(async (): Promise<void> => {
     await deleteAccount();
   });
 

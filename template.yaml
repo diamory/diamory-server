@@ -32,7 +32,7 @@ Globals:
     Environment:
       Variables:
         ItemTableName: !Ref ItemTable
-        AccountTableName: !Ref AccounttTable
+        AccountTableName: !Ref AccountTable
         PayloadsBucketName: !Ref PayloadsBucket
         UserPoolId: !Ref UserPool
         PriceInEuro: 3
@@ -142,9 +142,9 @@ Resources:
                   - "dynamodb:Query"
                 Resource:
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${ItemTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccounttTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccounttTable}/expires-index"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccounttTable}/status-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
@@ -254,10 +254,10 @@ Resources:
         - AttributeName: "id"
           KeyType: "RANGE"
 
-  AccounttTable:
+  AccountTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "diamory-accountt-${Stage}"
+      TableName: !Sub "diamory-account-${Stage}"
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -590,6 +590,36 @@ Resources:
             ApiId: !Ref Api
             Path: /account
             Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+  SkipTrialFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-skip-trial-${Stage}"
+      CodeUri: src/functions/accounts/skip-trial
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        HttpApiGetEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /account/trial
+            Method: delete
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

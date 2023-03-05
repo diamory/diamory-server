@@ -18,10 +18,17 @@ const getAccount = async (): Promise<Account | undefined> => {
   return Item as unknown as Account;
 };
 
-const putAccount = async (status: string): Promise<void> => {
+const putAccount = async (status: string, expires = 0, times = 0, trial = false): Promise<void> => {
   const params = {
     TableName: accountTableName,
-    Item: { accountId, v: 1, status }
+    Item: {
+      v: 1,
+      accountId,
+      status,
+      expires,
+      times,
+      trial
+    }
   };
   const command = new PutCommand(params);
   await dynamoDBClient.send(command);
