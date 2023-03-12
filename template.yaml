@@ -31,7 +31,6 @@ Globals:
     Timeout: 3
     Environment:
       Variables:
-        ItemTableName: !Ref ItemTable
         AccountTableName: !Ref AccountTable
         PayloadsBucketName: !Ref PayloadsBucket
         UserPoolId: !Ref UserPool
@@ -141,9 +140,7 @@ Resources:
                   - "dynamodb:UpdateItem"
                   - "dynamodb:Query"
                 Resource:
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${ItemTable}"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${ItemTable}/v-index"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
                   - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
               - Effect: Allow
@@ -238,36 +235,6 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  ItemTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "diamory-item-${Stage}"
-      TableClass: "STANDARD"
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: "accountId"
-          AttributeType: "S"
-        - AttributeName: "id"
-          AttributeType: "S"
-        - AttributeName: "v"
-          AttributeType: "N"
-      KeySchema:
-        - AttributeName: "accountId"
-          KeyType: "HASH"
-        - AttributeName: "id"
-          KeyType: "RANGE"
-      LocalSecondaryIndexes:
-        - IndexName: v-index
-          KeySchema:
-            - AttributeName: "accountId"
-              KeyType: "HASH"
-            - AttributeName: "v"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes: 
-              - "id"
-            ProjectionType: INCLUDE
-
   AccountTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -322,21 +289,22 @@ Resources:
   #    ██       ██████  ██   ████  ██████    ██    ██  ██████  ██   ████ ███████ 
 
   
-  #      _ _                     
-  #    (_) |_ ___ _ __ ___  ___ 
-  #    | | __/ _ \ '_ ` _ \/ __|
-  #    | | ||  __/ | | | | \__ \
-  #    |_|\__\___|_| |_| |_|___/
+  #                 _ 
+  #      __ _ _ __ (_)
+  #     / _` | '_ \| |
+  #    | (_| | |_) | |
+  #     \__,_| .__/|_|
+  #          |_|      
 
-  AddItemFunction:
+  PutItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "diamory-add-item-${Stage}"
-      CodeUri: src/functions/items/add-item
+      FunctionName: !Sub "diamory-put-item-${Stage}"
+      CodeUri: src/functions/api/put-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 256
+      MemorySize: 128
       Architectures:
         - x86_64
       Events:
@@ -344,8 +312,8 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /item
-            Method: post
+            Path: /put-item/{id}/{checksum}
+            Method: put
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -355,6 +323,7 @@ Resources:
         EntryPoints: 
           - app.ts
         External:
+          - "@aws-sdk/client-s3"
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
 
@@ -362,148 +331,25 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "diamory-get-item-${Stage}"
-      CodeUri: src/functions/items/get-item
+      CodeUri: src/functions/api/get-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 256
+      MemorySize: 128
       Architectures:
         - x86_64
       Events:
-        HttpApiGetEvent:
+        HttpApiGetEventForNewItem:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /item/{id}
+            Path: /get-item/{id}
             Method: get
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-  UpdateItemFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-update-item-${Stage}"
-      CodeUri: src/functions/items/update-item
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
+        HttpApiGetEventForOldItem:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /item
-            Method: put
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-  DeleteItemFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-delete-item-${Stage}"
-      CodeUri: src/functions/items/delete-item
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 256
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref Api
-            Path: /item/{id}
-            Method: delete
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-
-  #                        _                 _     
-  #     _ __   __ _ _   _| | ___   __ _  __| |___ 
-  #    | '_ \ / _` | | | | |/ _ \ / _` |/ _` / __|
-  #    | |_) | (_| | |_| | | (_) | (_| | (_| \__ \
-  #    | .__/ \__,_|\__, |_|\___/ \__,_|\__,_|___/
-  #    |_|          |___/                                 
-
-  AddPayloadFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-add-payload-${Stage}"
-      CodeUri: src/functions/payloads/add-payload
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 128
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref Api
-            Path: /payload/{checksum}
-            Method: post
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-  GetPayloadFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-get-payload-${Stage}"
-      CodeUri: src/functions/payloads/get-payload
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 128
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref Api
-            Path: /payload/{checksum}
+            Path: /get-item/{id}/{checksum}
             Method: get
     Metadata:
       BuildMethod: esbuild
@@ -518,11 +364,11 @@ Resources:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
 
-  ReplacePayloadFunction:
+  RemoveItemFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "diamory-replace-payload-${Stage}"
-      CodeUri: src/functions/payloads/replace-payload
+      FunctionName: !Sub "diamory-remove-item-${Stage}"
+      CodeUri: src/functions/api/remove-item
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -534,38 +380,7 @@ Resources:
           Type: HttpApi
           Properties:
             ApiId: !Ref Api
-            Path: /payload/{oldChecksum}/{newChecksum}
-            Method: put
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false
-        EntryPoints: 
-          - app.ts
-        External:
-          - "@aws-sdk/client-s3"
-          - "@aws-sdk/client-dynamodb"
-          - "@aws-sdk/lib-dynamodb"
-
-  DeletePayloadFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "diamory-delete-payload-${Stage}"
-      CodeUri: src/functions/payloads/delete-payload
-      Handler: app.lambdaHandler
-      Runtime: nodejs18.x
-      Role: !GetAtt ExecutionRole.Arn
-      MemorySize: 128
-      Architectures:
-        - x86_64
-      Events:
-        HttpApiGetEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref Api
-            Path: /payload/{checksum}
+            Path: /remove-item/{id}
             Method: delete
     Metadata:
       BuildMethod: esbuild
@@ -579,20 +394,12 @@ Resources:
           - "@aws-sdk/client-s3"
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
-
-
-
-  #                                      _       
-  #      __ _  ___ ___ ___  _   _ _ __ | |_ ___ 
-  #     / _` |/ __/ __/ _ \| | | | '_ \| __/ __|
-  #    | (_| | (_| (_| (_) | |_| | | | | |_\__ \
-  #     \__,_|\___\___\___/ \__,_|_| |_|\__|___/
 
   AddAcountFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "diamory-add-account-${Stage}"
-      CodeUri: src/functions/accounts/add-account
+      CodeUri: src/functions/api/add-account
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -622,7 +429,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "diamory-skip-trial-${Stage}"
-      CodeUri: src/functions/accounts/skip-trial
+      CodeUri: src/functions/api/skip-trial
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn
@@ -648,18 +455,11 @@ Resources:
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"
 
-
-
-  #    _   _ ___  ___ _ __ ___ 
-  #   | | | / __|/ _ \ '__/ __|
-  #   | |_| \__ \  __/ |  \__ \
-  #    \__,_|___/\___|_|  |___/
-
   DisableUserFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "diamory-disable-user-${Stage}"
-      CodeUri: src/functions/users/disable-user
+      CodeUri: src/functions/api/disable-user
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       Role: !GetAtt ExecutionRole.Arn

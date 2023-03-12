@@ -11,7 +11,7 @@
   "private": true,
   "scripts": {
     "compile_": "tsc",
-    "unit_": "jest --runInBand --verbose",
+    "unit_": "jest --runInBand --verbose --detectOpenHandles --forceExit",
     "lint": "eslint '*.ts' --quiet --fix",
     "test": "bash -c './scripts/tests.sh'",
     "deploy:dev": "sam build && sam deploy --config-env staging --profile diamory",
