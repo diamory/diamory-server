@@ -35,7 +35,7 @@ describe('Init Accout', (): void => {
   });
 
   test('returns with success when account is created.', async (): Promise<void> => {
-    const event = buildTestEvent('post', '/account', [], '', false);
+    const event = buildTestEvent('put', '/add-account', [], '', false);
     const { accountId, username, status, suspended, times, expires, trial } = testAccount;
 
     const { statusCode, body, headers } = await lambdaHandler(event);
@@ -58,7 +58,7 @@ describe('Init Accout', (): void => {
 
   test('returns with error if account was already created.', async (): Promise<void> => {
     await putAccount('some');
-    const event = buildTestEvent('post', '/account', [], '', false);
+    const event = buildTestEvent('put', '/add-account', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 

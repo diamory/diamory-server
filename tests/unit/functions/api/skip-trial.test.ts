@@ -30,7 +30,7 @@ describe('Skip Trial', (): void => {
 
   test('returns with success when trial is skipped.', async (): Promise<void> => {
     await putAccount('active', 42, 1, true);
-    const event = buildTestEvent('delete', '/account/trial', [], '', false);
+    const event = buildTestEvent('put', '/skip-trial', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -50,7 +50,7 @@ describe('Skip Trial', (): void => {
 
   test('returns with error if not paid enough.', async (): Promise<void> => {
     await putAccount('active', 42, 0, true);
-    const event = buildTestEvent('delete', '/account/trial', [], '', false);
+    const event = buildTestEvent('put', '/skip-trial', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -70,7 +70,7 @@ describe('Skip Trial', (): void => {
 
   test('returns with error if account is not in trial state.', async (): Promise<void> => {
     await putAccount('active', 42, 1, false);
-    const event = buildTestEvent('delete', '/account/trial', [], '', false);
+    const event = buildTestEvent('put', '/skip-trial', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -90,7 +90,7 @@ describe('Skip Trial', (): void => {
 
   test('returns with error if account is disabled.', async (): Promise<void> => {
     await putAccount('disabled', 42, 1, true);
-    const event = buildTestEvent('delete', '/account/trial', [], '', false);
+    const event = buildTestEvent('put', '/skip-trial', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -109,7 +109,7 @@ describe('Skip Trial', (): void => {
   });
 
   test('returns with error if account does not exist.', async (): Promise<void> => {
-    const event = buildTestEvent('delete', '/account/trial', [], '', false);
+    const event = buildTestEvent('put', '/skip-trial', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 

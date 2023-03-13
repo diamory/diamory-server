@@ -27,7 +27,7 @@ describe('Disable Accout', (): void => {
 
   test('returns with success when user is disabled.', async (): Promise<void> => {
     await putAccount('active');
-    const event = buildTestEvent('put', '/user/disable', [], '', false);
+    const event = buildTestEvent('put', '/disable-user', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -47,7 +47,7 @@ describe('Disable Accout', (): void => {
 
   test('returns with error if account is already disabled.', async (): Promise<void> => {
     await putAccount('disabled');
-    const event = buildTestEvent('put', '/user/disable', [], '', false);
+    const event = buildTestEvent('put', '/disable-user', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
@@ -64,7 +64,7 @@ describe('Disable Accout', (): void => {
   });
 
   test('returns with error if account does not exist.', async (): Promise<void> => {
-    const event = buildTestEvent('put', '/user/disable', [], '', false);
+    const event = buildTestEvent('put', '/disable-user', [], '', false);
 
     const { statusCode, body, headers } = await lambdaHandler(event);
 
