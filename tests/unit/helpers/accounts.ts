@@ -1,12 +1,19 @@
 import { dynamoDBClient } from '../localRes/dynamoDBClient';
-import { PutCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  PutCommand,
+  PutCommandInput,
+  GetCommand,
+  GetCommandInput,
+  DeleteCommand,
+  DeleteCommandInput
+} from '@aws-sdk/lib-dynamodb';
 import { Account } from '../types/account';
 
 const accountTableName = process.env.AccountTableName;
 const accountId = process.env.testAccountId;
 
 const getAccount = async (): Promise<Account | undefined> => {
-  const params = {
+  const params: GetCommandInput = {
     TableName: accountTableName,
     Key: { accountId, v: 1 }
   };
@@ -19,7 +26,7 @@ const getAccount = async (): Promise<Account | undefined> => {
 };
 
 const putAccount = async (status: string, expires = 0, times = 0, trial = false): Promise<void> => {
-  const params = {
+  const params: PutCommandInput = {
     TableName: accountTableName,
     Item: {
       v: 1,
@@ -35,7 +42,7 @@ const putAccount = async (status: string, expires = 0, times = 0, trial = false)
 };
 
 const deleteAccount = async (): Promise<void> => {
-  const params = {
+  const params: DeleteCommandInput = {
     TableName: accountTableName,
     Key: { accountId, v: 1 }
   };

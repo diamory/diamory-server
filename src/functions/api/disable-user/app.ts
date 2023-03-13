@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { disableUser } from './cognitoClient';
 import { dynamoDBClient } from './dynamoDBClient';
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { UpdateCommand, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
 
 const invalidStatusError = 'account does not exist or has invalid status.';
 
@@ -17,7 +17,7 @@ const disableTheUser = async (Username: string): Promise<void> => {
 };
 
 const disableTheAccount = async (accountId: string): Promise<boolean> => {
-  const params = {
+  const params: UpdateCommandInput = {
     TableName: process.env.AccountTableName,
     Key: { v: 1, accountId },
     ExpressionAttributeValues: {

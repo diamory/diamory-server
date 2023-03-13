@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, GetCommandInput, UpdateCommand, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
 import { Account } from './account';
 
 const notPaidEnoughError = 'not paid enough.';
@@ -25,7 +25,7 @@ const calculateExpires = (): number => {
 };
 
 const getAccount = async (accountId: string): Promise<Account | undefined> => {
-  const params = {
+  const params: GetCommandInput = {
     TableName,
     Key: { v: 1, accountId }
   };
@@ -38,7 +38,7 @@ const getAccount = async (accountId: string): Promise<Account | undefined> => {
 };
 
 const skipTrial = async (accountId: string, times: number): Promise<void> => {
-  const params = {
+  const params: UpdateCommandInput = {
     TableName,
     Key: { v: 1, accountId },
     ExpressionAttributeValues: {

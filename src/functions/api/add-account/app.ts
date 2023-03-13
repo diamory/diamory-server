@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResult } from 'aws-lambda';
 import { dynamoDBClient } from './dynamoDBClient';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, PutCommandInput } from '@aws-sdk/lib-dynamodb';
 import { Account } from './account';
 
 const accountAlreadyCreatedError = 'account already exists.';
@@ -30,7 +30,7 @@ const addAccount = async (accountId: string, username: string): Promise<boolean>
     expires: calculateExpires(),
     trial: true
   };
-  const params = {
+  const params: PutCommandInput = {
     TableName: process.env.AccountTableName,
     Item,
     ConditionExpression: 'attribute_not_exists(accountId)'
