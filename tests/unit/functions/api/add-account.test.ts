@@ -65,7 +65,7 @@ describe('Init Accout', (): void => {
     const account = await getAccount();
     const { message: apiMessage } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(400);
-    assert.that(apiMessage).is.equalTo(`some error happened: ${accountAlreadyCreatedError}`);
+    assert.that(apiMessage).is.equalTo(accountAlreadyCreatedError);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(account).is.not.undefined();
     assert.that(account).is.not.null();

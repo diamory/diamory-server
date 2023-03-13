@@ -59,7 +59,7 @@ const errorAlreadyCreatedResponse = (): APIGatewayProxyResult => {
     statusCode: 400,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${accountAlreadyCreatedError}`
+      message: accountAlreadyCreatedError
     })
   };
 };
@@ -70,7 +70,7 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
     statusCode: 500,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${errMsg}`
+      message: errMsg
     })
   };
 };

@@ -67,7 +67,7 @@ const error4xxResponse = (statusCode: number, errMsg: string): APIGatewayProxyRe
     statusCode,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${errMsg}`
+      message: errMsg
     })
   };
 };
@@ -78,7 +78,7 @@ const error500Response = (err: unknown): APIGatewayProxyResult => {
     statusCode: 500,
     headers,
     body: JSON.stringify({
-      message: `some error happened: ${errMsg}`
+      message: errMsg
     })
   };
 };

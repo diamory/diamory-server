@@ -57,7 +57,7 @@ describe('Skip Trial', (): void => {
     const account = await getAccount();
     const { message: apiMessage } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(apiMessage).is.equalTo(`some error happened: ${notPaidEnoughError}`);
+    assert.that(apiMessage).is.equalTo(notPaidEnoughError);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(account).is.not.undefined();
     assert.that(account).is.not.null();
@@ -77,7 +77,7 @@ describe('Skip Trial', (): void => {
     const account = await getAccount();
     const { message: apiMessage } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(400);
-    assert.that(apiMessage).is.equalTo(`some error happened: ${isNotTrialError}`);
+    assert.that(apiMessage).is.equalTo(isNotTrialError);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(account).is.not.undefined();
     assert.that(account).is.not.null();
@@ -97,7 +97,7 @@ describe('Skip Trial', (): void => {
     const account = await getAccount();
     const { message: apiMessage } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(403);
-    assert.that(apiMessage).is.equalTo(`some error happened: ${invalidStatusError}`);
+    assert.that(apiMessage).is.equalTo(invalidStatusError);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(account).is.not.undefined();
     assert.that(account).is.not.null();
@@ -116,7 +116,7 @@ describe('Skip Trial', (): void => {
     const account = await getAccount();
     const { message: apiMessage } = JSON.parse(body);
     assert.that(statusCode).is.equalTo(404);
-    assert.that(apiMessage).is.equalTo(`some error happened: ${missingAccountError}`);
+    assert.that(apiMessage).is.equalTo(missingAccountError);
     assert.that(headers ? headers['Content-Type'] : '').is.equalTo('application/json');
     assert.that(account).is.undefined();
   });
