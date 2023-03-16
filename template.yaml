@@ -31,7 +31,7 @@ Globals:
     Timeout: 3
     Environment:
       Variables:
-        AccountTableName: !Ref AccountTable
+        AccountTableName: !Ref AccoountTable
         PayloadsBucketName: !Ref PayloadsBucket
         UserPoolId: !Ref UserPool
         PriceInEuro: 3
@@ -140,9 +140,9 @@ Resources:
                   - "dynamodb:UpdateItem"
                   - "dynamodb:Query"
                 Resource:
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccountTable}"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/expires-index"
-                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccountTable}/status-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:table/${AccoountTable}"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccoountTable}/expires-index"
+                  - !Sub "arn:aws:dynamodb:eu-central-1:*:index/${AccoountTable}/status-index"
               - Effect: Allow
                 Action:
                   - "s3:PutObject"
@@ -235,10 +235,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  AccountTable:
+  AccoountTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "diamory-account-${Stage}"
+      TableName: !Sub "diamory-accoount-${Stage}"
       TableClass: "STANDARD"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -268,6 +268,7 @@ Resources:
               - "status"
               - "suspended"
               - "times"
+              - "trial"
             ProjectionType: INCLUDE
         - IndexName: status-index
           KeySchema:
@@ -482,6 +483,84 @@ Resources:
         EntryPoints: 
           - app.ts
         External:
+          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+
+
+  #              _              _       _          _ 
+  #     ___  ___| |__   ___  __| |_   _| | ___  __| |
+  #    / __|/ __| '_ \ / _ \/ _` | | | | |/ _ \/ _` |
+  #    \__ \ (__| | | |  __/ (_| | |_| | |  __/ (_| |
+  #    |___/\___|_| |_|\___|\__,_|\__,_|_|\___|\__,_|
+
+  HandleExpiredAccountsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-handle-expired-accounts-${Stage}"
+      CodeUri: src/functions/scheduled/handle-expired-accounts
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Enabled: !Equals 
+              - !Ref Stage
+              - "prod"
+            Name: !Sub "handle-expired-accounts-schedule-${Stage}"
+            Description: "Scheduled to run daily at 0:00 am"
+            Schedule: "cron(0 0 * * ? *)"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-ses"
+          - "@aws-sdk/client-cognito-identity-provider"
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+
+  RemoveDisabledUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "diamory-remove-disabled-users-${Stage}"
+      CodeUri: src/functions/scheduled/remove-disabled-users
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Role: !GetAtt ExecutionRole.Arn
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Enabled: !Equals 
+              - !Ref Stage
+              - "prod"
+            Name: !Sub "delete-disabled-users-schedule-${Stage}"
+            Description: "Scheduled to run daily at 0:00 am"
+            Schedule: "cron(30 0 * * ? *)"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints: 
+          - app.ts
+        External:
+          - "@aws-sdk/client-s3"
           - "@aws-sdk/client-cognito-identity-provider"
           - "@aws-sdk/client-dynamodb"
           - "@aws-sdk/lib-dynamodb"

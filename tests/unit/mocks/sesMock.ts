@@ -1,26 +1,16 @@
 import { SendEmailCommandInput, SendEmailCommandOutput } from '@aws-sdk/client-ses';
 
-interface GivenMailParams {
-  From?: string;
-  To?: string;
-  Subject?: string;
-  Message?: string;
-}
+let givenMailParams: SendEmailCommandInput | null = null;
 
-let givenMailParams: GivenMailParams = {};
-
-const getAndResetGivenSendEmailParams = (): GivenMailParams => {
+const getAndResetGivenSendEmailParams = (): SendEmailCommandInput | null => {
   const value = givenMailParams;
-  givenMailParams = {};
+  givenMailParams = null;
   return value;
 };
 
-const sendEmail = async (params: SendEmailCommandInput): Promise<SendEmailCommandOutput> => {
-  givenMailParams.From = params.Source;
-  givenMailParams.To = params.Destination?.ToAddresses ? params.Destination.ToAddresses[0] : '';
-  givenMailParams.Subject = params.Message?.Subject?.Data ?? '';
-  givenMailParams.Message = params.Message?.Body?.Text?.Data ?? '';
+const sendMail = async (params: SendEmailCommandInput): Promise<SendEmailCommandOutput> => {
+  givenMailParams = params;
   return { MessageId: '', $metadata: {} };
 };
 
-export { sendEmail, getAndResetGivenSendEmailParams };
+export { sendMail, getAndResetGivenSendEmailParams };

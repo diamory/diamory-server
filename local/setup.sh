@@ -20,23 +20,13 @@ then
   } >>$CONFIG_FILE
 fi
 
-# create item table
-aws dynamodb create-table \
-  --endpoint-url http://localhost:8000 \
-  --table-name diamory-item--test \
-  --attribute-definitions '[{"AttributeName":"accountId","AttributeType":"S"},{"AttributeName":"id","AttributeType":"S"},{"AttributeName":"v","AttributeType":"N"}]' \
-  --key-schema '[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"id","KeyType":"RANGE"}]' \
-  --local-secondary-indexes '[{"IndexName":"v-index","KeySchema":[{"AttributeName":"accountId","KeyType":"HASH"},{"AttributeName":"v","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["id"],"ProjectionType":"INCLUDE"}}]' \
-  --billing-mode PAY_PER_REQUEST \
-  > /dev/null
-
   # create account table
 aws dynamodb create-table \
   --endpoint-url http://localhost:8000 \
   --table-name diamory-account--test \
   --attribute-definitions '[{"AttributeName":"v","AttributeType":"N"},{"AttributeName":"accountId","AttributeType":"S"},{"AttributeName":"status","AttributeType":"S"},{"AttributeName":"expires","AttributeType":"N"}]' \
   --key-schema '[{"AttributeName":"v","KeyType":"HASH"},{"AttributeName":"accountId","KeyType":"RANGE"}]' \
-  --local-secondary-indexes '[{"IndexName":"expires-index","KeySchema":[{"AttributeName":"v","KeyType":"HASH"},{"AttributeName":"expires","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["username","status","suspended","times"],"ProjectionType":"INCLUDE"}},{"IndexName":"status-index","KeySchema":[{"AttributeName":"v","KeyType":"HASH"},{"AttributeName":"status","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["username"],"ProjectionType":"INCLUDE"}}]' \
+  --local-secondary-indexes '[{"IndexName":"expires-index","KeySchema":[{"AttributeName":"v","KeyType":"HASH"},{"AttributeName":"expires","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["username","status","suspended","times","trial"],"ProjectionType":"INCLUDE"}},{"IndexName":"status-index","KeySchema":[{"AttributeName":"v","KeyType":"HASH"},{"AttributeName":"status","KeyType":"RANGE"}],"Projection":{"NonKeyAttributes":["username"],"ProjectionType":"INCLUDE"}}]' \
   --billing-mode PAY_PER_REQUEST \
   > /dev/null
 
